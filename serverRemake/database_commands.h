@@ -27,7 +27,10 @@ MediaNode* createNode(int db_position, double tmdb_id, bool media_type, int genr
 
 void free_linked_list(MediaNode* header);
 void free_individual_node(MediaNode* pointer);
+void insert_node();
 
+//compares titles and returns 1 or 2 for which node repectively
+int title_compare(char* node, char* next_node);
 
 int database_sort_all(char* folder_location);
 int database_sort_individual(char* database_file, char* folder_location);

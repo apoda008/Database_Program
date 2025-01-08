@@ -1,5 +1,23 @@
 #include "database_commands.h"
 
+int title_compare(char* node, char* next_node) {
+	for (int i = 0; i < 260; i++) {
+		
+		if ( 1 < 2) {
+			continue;
+		}
+		else {
+			if (node[i] < next_node[i]) {
+				return 1;
+			}
+			else {
+				return 2;
+			}
+			
+		}
+	}
+}
+
 int database_sort_individual(char* database_file) {
 	
 	printf("DATABASE FILE: %s\n", database_file);
@@ -40,30 +58,55 @@ int database_sort_individual(char* database_file) {
 
 	fclose(file);
 
-	//iteration for error checking
-	//MediaNode* current = head;
-	//while (current != NULL) {
-	//	printf("================DATA read: ================\n");
-	//	printf("db_pos: %d\n", current->data.db_position);
-	//	printf("Title: %s\n", current->data.title);
-	//	printf("tmdb_id: %f\n", current->data.tmdb_id);
-	//	printf("media: %d\n", current->data.media_type);
-	//	/*for (int i = 0; i < 19; i++) {
-	//		printf("genre: %d\n", current->data.genre_types[i]);
-	//	}*/
-	//	printf("descr: %s\n", current->data.description);
-	//	printf("db_pos: %s\n", current->data.dir_position_media);
-	//	printf("===============DATA read: ================\n");	
-	//	current = current->next;
-	//}
+	//Sorts the linked list
+	MediaNode* current = head;
+	MediaNode* prev = head;
+	MediaNode* next_node = &current->next;
+	while (current != NULL) {
+		int result = title_compare(current->data.title, next_node->data.title);
+		if (result == 1) {
+			next_node = next_node->next;
+		}
+		else {
+			if (current == head) {
+				next_node = head;
+			}
+			prev->next = next_node;
+			next_node->next = current;
+			current = next_node;
+			prev = current;
+		}
+		if (next_node->next == NULL) {
+			prev = current;
+			current = current->next;
+		}
+		
+	}
 
-	/*
-	TODO: 
-	Sort the newly established link list 
-	re-iterate and assign a db_num value
-	then resave into a sorted bin file
-	
-	*/
+	//iteration for error checking
+//MediaNode* current2 = head;
+//while (current2 != NULL) {
+//	printf("================DATA read: ================\n");
+//	printf("db_pos: %d\n", current->data.db_position);
+//	printf("Title: %s\n", current->data.title);
+//	printf("tmdb_id: %f\n", current->data.tmdb_id);
+//	printf("media: %d\n", current->data.media_type);
+//	/*for (int i = 0; i < 19; i++) {
+//		printf("genre: %d\n", current->data.genre_types[i]);
+//	}*/
+//	printf("descr: %s\n", current->data.description);
+//	printf("db_pos: %s\n", current->data.dir_position_media);
+//	printf("===============DATA read: ================\n");	
+//	current2 = current->next;
+//}
+
+/*
+TODO:
+Sort the newly established link list
+re-iterate and assign a db_num value
+then resave into a sorted bin file
+
+*/
 	
 	return 1;
 }
