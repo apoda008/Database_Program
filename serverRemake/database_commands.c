@@ -1,4 +1,12 @@
 #include "database_commands.h"
+/////////////////////////READ/WRITE////////////////////////////////////
+MediaNode* bin_read(char* database_file);
+void bin_write(char* database_file);
+///////////////////////////////////////////////////////////////////////
+
+//*********************LIST/NODE MANAGEMENT****************************
+//*********************************************************************
+
 void print_list(MediaNode* head, char* choice) {
 	//all data in the node
 	while (head != NULL) {
@@ -47,22 +55,6 @@ void print_list(MediaNode* head, char* choice) {
 	}
 }
 
-//might remove
-int title_compare(char* node, char* next_node) {
-	int string_compare = strcmp(node, next_node);
-	if (string_compare < 0) {
-		return 1;
-	}
-	else if (string_compare > 0) {
-		return 2; 
-	}
-	else {
-		return 0; //they match meaning duplicate
-	}
-}
-
-
-//*********************EVERYTHING FOR MERGE SORT***********************
 void split_list(MediaNode* source, MediaNode** front_ref, MediaNode** back_ref) {
 	MediaNode* slow = source;
 	MediaNode* fast = source->next;
@@ -118,6 +110,12 @@ void merge_sort(MediaNode** headRef) {
 }
 
 //*********************************************************************
+//*********************************************************************
+
+
+/*
+##########################SORTING COMMANDS#############################
+*/
 
 int database_sort_individual(char* database_file) {
 	
@@ -128,13 +126,9 @@ int database_sort_individual(char* database_file) {
 		return 0;
 	}
 	
-	printf("opened file\n");
-	
 	MediaNode* head = NULL;
 	MediaNode* tail = NULL;
 	MediaData temp;
-	
-	printf("starting read\n");
 	
 	while ( (fread(&temp, sizeof(MediaData), 1, file)) == 1) {
 		MediaNode* new_node = (MediaNode*)malloc(sizeof(MediaNode));
@@ -164,15 +158,41 @@ int database_sort_individual(char* database_file) {
 	//DELETE
 	printf("\n");	
 	merge_sort(&head);
+	//DELETE
 	print_list(head, "title");
 
-/*
-TODO:
-Sort the newly established link list
-re-iterate and assign a db_num value
-then resave into a sorted bin file
+	//assigns db position
+	//int db_position_num = 1;
+	//MediaNode* current = head;
+	//while (current != NULL) {
+	//	current->data.db_position = db_position_num;
+	//	current = current->next;
+	//	db_position_num += 1;
+	//}
 
-*/
+	FILE* file = fopen(database_file, "wb");
+	if (file == NULL) {
+		perror("Failed to open write file.");
+		return 0;
+	}
+
+	int db_num = 1;
+	MediaNode* current = head;
+	while (current != NULL) {
+		current->data.db_position = db_num;
+		db_num += 1;
+		fwrite(&current->data, sizeof(MediaData), 1, file);
+		current = current->next;
+	}
+
+	fclose(file);
+	/*
+	TODO:
+	Sort the newly established link list
+	re-iterate and assign a db_num value
+	then resave into a sorted bin file
+	then FREE linked list
+	*/
 	
 	return 1;
 }
@@ -207,3 +227,7 @@ int database_sort_all(char* folder_location) {
 
 	return 1;
 }
+
+/*
+##########################SORTING COMMANDS#############################
+*/
