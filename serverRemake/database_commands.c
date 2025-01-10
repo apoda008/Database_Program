@@ -1,7 +1,9 @@
 #include "database_commands.h"
 void print_list(MediaNode* head, char* choice) {
-	if (strcmp(choice, "all") == 0) {
-		while (head != NULL) {
+	//all data in the node
+	while (head != NULL) {
+		if (strcmp(choice, "all") == 0) {
+
 			printf("================DATA ALL: ================\n");
 			printf("db_pos: %d\n", head->data.db_position);
 			printf("Title: %s\n", head->data.title);
@@ -13,20 +15,36 @@ void print_list(MediaNode* head, char* choice) {
 			printf("description: %s\n", head->data.description);
 			printf("dir position: %s\n", head->data.dir_position_media);
 			printf("===============DATA ALL: ================\n");
-			head = head->next;
+
 		}
-	}
-	if (strcmp(choice, "db_pos") == 0) { printf("db_pos: %d\n", head->data.db_position); }
-	if (strcmp(choice, "title") == 0) { printf("Title: %s\n", head->data.title); }
-	if (strcmp(choice, "tmdb_id") == 0) { printf("tmdb_id: %f\n", head->data.tmdb_id); }
-	if (strcmp(choice, "media_type") == 0) { printf("media: %d\n", head->data.media_type); }
-	if (strcmp(choice, "genre") == 0) {
-		for (int i = 0; i < 19; i++) {
-			printf("genre: %d\n", head->data.genre_types[i]);
+		else if (strcmp(choice, "db_pos") == 0) {
+			printf("db_pos: %d\n", head->data.db_position);
 		}
+		else if (strcmp(choice, "title") == 0) {
+			printf("Title: %s\n", head->data.title);
+		}
+		else if (strcmp(choice, "tmdb_id") == 0) {
+			printf("tmdb_id: %f\n", head->data.tmdb_id);
+		}
+		else if (strcmp(choice, "media_type") == 0) {
+			printf("media: %d\n", head->data.media_type);
+		}
+		else if (strcmp(choice, "genre") == 0) {
+			for (int i = 0; i < 19; i++) {
+				printf("genre: %d\n", head->data.genre_types[i]);
+			}
+		}
+		else if (strcmp(choice, "descr") == 0) {
+			printf("description: %s\n", head->data.description);
+		}
+		else if (strcmp(choice, "dir") == 0) {
+			printf("dir position: %s\n", head->data.dir_position_media);
+		}
+		else {
+			printf("FAILED: improper second argument");
+		}
+		head = head->next;
 	}
-	if (strcmp(choice, "descr") == 0) { printf("description: %s\n", head->data.description); }
-	if (strcmp(choice, "dir") == 0) { printf("dir position: %s\n", head->data.dir_position_media); }
 }
 
 //might remove
@@ -44,13 +62,62 @@ int title_compare(char* node, char* next_node) {
 }
 
 
+//*********************EVERYTHING FOR MERGE SORT***********************
+void split_list(MediaNode* source, MediaNode** front_ref, MediaNode** back_ref) {
+	MediaNode* slow = source;
+	MediaNode* fast = source->next;
 
+	while (fast != NULL) {
+		fast = fast->next;
+	}
+	if (fast != NULL) {
+		slow = slow->next;
+		fast = fast->next;
+	}
+	
+	*front_ref = source;
+	*back_ref = slow->next;
+	slow->next = NULL;
+}
 
+MediaNode* merge_list(MediaNode* a, MediaNode* b) {
+	if (a == NULL) { return b; }
+	if (b == NULL) { return a; }
 
+	MediaNode* result = NULL;
 
+	if (strcmp(a->data.title, b->data.title) <= 0) {
+		result = a;
+		result->next = merge_list(a->next, b);
+	}
+	else {
+		result = b;
+		result->next = merge_list(a, b->next);
+	}
 
+	return result;
+}
 
+void merge_sort(MediaNode** headRef) {
+	MediaNode* head = *headRef;
 
+	if (head == NULL || head->next == NULL) {
+		return; //0 or 1 node
+	}
+
+	MediaNode* front; 
+	MediaNode* back;
+
+	split_list(head, &front, &back);
+
+	merge_sort(&front);
+	merge_sort(&back);
+
+	*headRef = merge_list(front, back);
+	
+}
+
+//*********************************************************************
 
 int database_sort_individual(char* database_file) {
 	
@@ -95,62 +162,9 @@ int database_sort_individual(char* database_file) {
 	fclose(file);
 	
 	//DELETE
-	printf("\n");
-	
-	//============Sorts the linked list=================
-	MediaNode* current = head;
-	MediaNode* prev = head;
-	MediaNode* next_node = head->next;
-
-	int db_pos = 0;
-	while (current->next != NULL) {
-		db_pos += 1;
-		//might remove this function altogether
-		printf("Prev: %s\n", prev->data.title);
-		printf("current: %s\n", current->data.title);
-		printf("next: %s\n", next_node->data.title);
-		
-		int result = title_compare(current->data.title, next_node->data.title);
-		printf("result %d\n", result);
-		
-		if (result == 2) {
-			if (current == head) {
-				head = next_node;
-				prev = next_node;
-				current->next = next_node->next;
-				next_node->next = current;
-				current = next_node;
-			}
-			else {
-			//current->next = next_node->next;
-			next_node->next = current;
-			prev->next = next_node;
-			current = next_node;
-			}
-		}
-		
-		//for if even or 1
-		if (next_node->next == NULL) {
-			if ((db_pos > 1) && (current != head)) {
-				prev = prev->next;
-				printf("LOOK AT THIS ======?\n");
-			}
-			current = current->next;
-			next_node = current->next;
-			
-			printf("NEXT CYCLE \n");
-		}
-		else {
-			next_node = next_node->next;
-		}
-		
-	}
-//========================================================
-
-
-
-//iteration for error checking
-	print_list(head, "all");
+	printf("\n");	
+	merge_sort(&head);
+	print_list(head, "title");
 
 /*
 TODO:
