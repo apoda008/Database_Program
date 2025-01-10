@@ -11,7 +11,7 @@ void folder_files_delete() {
     
     hFind = FindFirstFile(folder_path, &findData);
     if (hFind == INVALID_HANDLE_VALUE) {
-        printf("Error: Unable to open directory %s\n", folder_path);
+        _tprintf(TEXT("Error: Unable to open directory %s\n"), folder_path);
         return;
     }
 

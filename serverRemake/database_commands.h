@@ -23,24 +23,31 @@ typedef struct MediaNode {
 } MediaNode;
 
 //=========LIST/NODE MANAGEMENT====================
-void print_list(MediaNode*, char* choice);
 void split_list(MediaNode* source, MediaNode** front_ref, MediaNode** back_ref);
 MediaNode* merge_list(MediaNode* a, MediaNode* b);
 void merge_sort(MediaNode** headRef);
 
+void print_list(MediaNode*, char* choice);
 void free_linked_list(MediaNode* header);
-void free_individual_node(MediaNode* pointer);
-void insert_node();
+void free_individual_node(MediaNode* pointer, void* ref_obj);
+void insert_node(MediaNode* node);
 
 
 //-------------SORTING COMMANDS---------------------
 int database_sort_all(char* folder_location);
-int database_sort_individual(char* database_file, char* folder_location);
+int database_sort_individual(char* database_file);
 //int parse_into_datastruct(char* file);
 
 //------------FILE MANAGEMENT---------------------
 MediaNode* bin_read(char* database_file);
-void bin_write(char* database_file);
+void bin_write(char* database_file, MediaNode* head_ref);
+
+//------------Search Commands---------------------
+
+//returns requested info
+void* search_database_info(void* requested_info);
+//returns entire node
+MediaNode* search_database_obj(void* requested_info);
 
 //TODO
 //void add_to_database();

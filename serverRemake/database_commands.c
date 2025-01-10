@@ -1,11 +1,77 @@
 #include "database_commands.h"
 /////////////////////////READ/WRITE////////////////////////////////////
-MediaNode* bin_read(char* database_file);
-void bin_write(char* database_file);
+MediaNode* bin_read(char* database_file) {
+	printf("DATABASE FILE: %s\n", database_file);
+	FILE* file = fopen(database_file, "rb");
+	if (file == NULL) {
+		perror("Failed to open file");
+		return 0;
+	}
+
+	MediaNode* head = NULL;
+	MediaNode* tail = NULL;
+	MediaData temp;
+
+	while ((fread(&temp, sizeof(MediaData), 1, file)) == 1) {
+		MediaNode* new_node = (MediaNode*)malloc(sizeof(MediaNode));
+		if (new_node == NULL) {
+			perror("MediaData Memory allocation failed");
+			fclose(file);
+			return 0;
+		}
+
+		memcpy(&new_node->data, &temp, sizeof(MediaData));
+		new_node->next = NULL;
+
+		if (head == NULL) {
+			head = new_node;
+			tail = new_node;
+		}
+		else {
+			tail->next = new_node;
+			tail = new_node;
+		}
+		//DELETE
+		printf("Title order: %s\n", new_node->data.title);
+	}
+
+	fclose(file);
+	return head;
+}
+
+void bin_write(char* database_file, MediaNode* head_ref) {
+	FILE* file = fopen(database_file, "wb");
+	if (file == NULL) {
+		perror("Failed to open write file.");
+		return 0;
+	}
+
+	int db_num = 1;
+	MediaNode* current = head_ref;
+	while (current != NULL) {
+		current->data.db_position = db_num;
+		db_num += 1;
+		fwrite(&current->data, sizeof(MediaData), 1, file);
+		current = current->next;
+	}
+
+	fclose(file);
+}
 ///////////////////////////////////////////////////////////////////////
+
 
 //*********************LIST/NODE MANAGEMENT****************************
 //*********************************************************************
+void free_linked_list(MediaNode* header) {
+	MediaNode* current = header;
+	
+	while (current != NULL) {
+		MediaNode* to_delete = current;
+		current = current->next;
+		free(to_delete);
+		to_delete = NULL;
+	}
+}
 
 void print_list(MediaNode* head, char* choice) {
 	//all data in the node
@@ -53,6 +119,10 @@ void print_list(MediaNode* head, char* choice) {
 		}
 		head = head->next;
 	}
+}
+
+void insert_node(MediaNode* node) {
+	//TODO:
 }
 
 void split_list(MediaNode* source, MediaNode** front_ref, MediaNode** back_ref) {
@@ -118,86 +188,26 @@ void merge_sort(MediaNode** headRef) {
 */
 
 int database_sort_individual(char* database_file) {
-	
-	printf("DATABASE FILE: %s\n", database_file);
-	FILE* file = fopen(database_file, "rb");
-	if(file == NULL) {
-		perror("Failed to open file");
-		return 0;
-	}
-	
-	MediaNode* head = NULL;
-	MediaNode* tail = NULL;
-	MediaData temp;
-	
-	while ( (fread(&temp, sizeof(MediaData), 1, file)) == 1) {
-		MediaNode* new_node = (MediaNode*)malloc(sizeof(MediaNode));
-		if (new_node == NULL) {
-			perror("MediaData Memory allocation failed");
-			fclose(file);
-			return 0;
-		}
+		
+	MediaNode* head = bin_read(database_file);
 
-		memcpy(&new_node->data, &temp, sizeof(MediaData));
-		new_node->next = NULL;
-
-		if (head == NULL) {
-			head = new_node;
-			tail = new_node;
-		}
-		else {
-			tail->next = new_node;
-			tail = new_node;
-		}
-		//DELETE
-		printf("Title order: %s\n", new_node->data.title);
-	}
-
-	fclose(file);
-	
-	//DELETE
-	printf("\n");	
 	merge_sort(&head);
-	//DELETE
-	print_list(head, "title");
-
-	//assigns db position
-	//int db_position_num = 1;
-	//MediaNode* current = head;
-	//while (current != NULL) {
-	//	current->data.db_position = db_position_num;
-	//	current = current->next;
-	//	db_position_num += 1;
-	//}
-
-	FILE* file = fopen(database_file, "wb");
-	if (file == NULL) {
-		perror("Failed to open write file.");
-		return 0;
-	}
-
-	int db_num = 1;
-	MediaNode* current = head;
-	while (current != NULL) {
-		current->data.db_position = db_num;
-		db_num += 1;
-		fwrite(&current->data, sizeof(MediaData), 1, file);
-		current = current->next;
-	}
-
-	fclose(file);
-	/*
-	TODO:
-	Sort the newly established link list
-	re-iterate and assign a db_num value
-	then resave into a sorted bin file
-	then FREE linked list
-	*/
 	
+	if (head != NULL) {
+		bin_write(database_file, head);
+	}
+	
+	free_linked_list(head);
+		
 	return 1;
 }
 
 int database_sort_all(char* folder_location) {
+	/*
+	TODO:
+	will need adjust for non alphabet characters.
+	*/
+
 
 	//might need adjustment for unknowns (numbers/symbols)
 	printf("Sorting all Database files\n\n");
@@ -214,6 +224,8 @@ int database_sort_all(char* folder_location) {
 		file_name[0] = alphabet[i];
 		strcat_s(file_first, 260, "\\");
 		strcat_s(file_first, 260, file_name);
+		
+		//DELETE
 		printf("strcat %s\n", file_first);
 		
 		if ((database_sort_individual(&file_first)) == 1) {
@@ -231,3 +243,10 @@ int database_sort_all(char* folder_location) {
 /*
 ##########################SORTING COMMANDS#############################
 */
+
+//------------------------Search Commands------------------------------
+
+void* search_database_info(void* requested_info);
+MediaNode* search_database_obj(void* requested_info);
+
+//---------------------------------------------------------------------
