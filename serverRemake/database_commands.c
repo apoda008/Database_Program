@@ -1,20 +1,15 @@
 #include "database_commands.h"
 
 int title_compare(char* node, char* next_node) {
-	for (int i = 0; i < 260; i++) {
-		
-		if ( 1 < 2) {
-			continue;
-		}
-		else {
-			if (node[i] < next_node[i]) {
-				return 1;
-			}
-			else {
-				return 2;
-			}
-			
-		}
+	int string_compare = strcmp(node, next_node);
+	if (string_compare < 0) {
+		return 1;
+	}
+	else if (string_compare > 0) {
+		return 2; 
+	}
+	else {
+		return 0; //they match meaning duplicate
 	}
 }
 
@@ -53,32 +48,44 @@ int database_sort_individual(char* database_file) {
 		else {
 			tail->next = new_node;
 			tail = new_node;
-		}	
+		}
+		printf("Title order: %s\n", new_node->data.title);
 	}
 
 	fclose(file);
-
+	printf("\n");
 	//Sorts the linked list
 	MediaNode* current = head;
 	MediaNode* prev = head;
-	MediaNode* next_node = &current->next;
-	while (current != NULL) {
+	MediaNode* next_node = head->next;
+
+	int db_pos = 0;
+	while (current->next != NULL) {
+		db_pos += 1;
+		//might remove this function altogether
+		printf("Prev: %s\n", prev->data.title);
+		printf("current: %s\n", current->data.title);
+		printf("next: %s\n", next_node->data.title);
+		
 		int result = title_compare(current->data.title, next_node->data.title);
-		if (result == 1) {
-			next_node = next_node->next;
+		if (result == 2) {
+			//current = next_node->next;
+			next_node->next = current;
+			prev->next = next_node;
+		}
+		
+		//for if even or 1
+		if (next_node->next == NULL) {
+			if ((db_pos > 1) && (current != head)) {
+				prev = prev->next;
+			}
+			current = current->next;
+			next_node = current->next;
+			
+			printf("NEXT CYCLE \n");
 		}
 		else {
-			if (current == head) {
-				next_node = head;
-			}
-			prev->next = next_node;
-			next_node->next = current;
-			current = next_node;
-			prev = current;
-		}
-		if (next_node->next == NULL) {
-			prev = current;
-			current = current->next;
+			next_node = next_node->next;
 		}
 		
 	}

@@ -138,12 +138,14 @@
       <ScanSourceForModuleDependencies Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ScanSourceForModuleDependencies>
     </ClCompile>
     <ClCompile Include="startup.c" />
+    <ClCompile Include="test_suite_db.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="cJSON.h" />
     <ClInclude Include="database_commands.h" />
     <ClInclude Include="mediaparse.h" />
     <ClInclude Include="startup.h" />
+    <ClInclude Include="test_suite_db.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
