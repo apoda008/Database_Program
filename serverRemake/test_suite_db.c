@@ -70,11 +70,9 @@ void random_bin_file_create() {
         perror("error opening file in test\n");
     }
     
-
     //adjust i for number of objects
     for (int i = 0; i < 5; i++) {
         fwrite(&array[i], sizeof(MediaData), 1, file);
-        
     }
     fclose(file);
 }

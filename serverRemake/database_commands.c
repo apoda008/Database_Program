@@ -1,5 +1,35 @@
 #include "database_commands.h"
+void print_list(MediaNode* head, char* choice) {
+	if (strcmp(choice, "all") == 0) {
+		while (head != NULL) {
+			printf("================DATA ALL: ================\n");
+			printf("db_pos: %d\n", head->data.db_position);
+			printf("Title: %s\n", head->data.title);
+			printf("tmdb_id: %f\n", head->data.tmdb_id);
+			printf("media: %d\n", head->data.media_type);
+			for (int i = 0; i < 19; i++) {
+				printf("genre: %d\n", head->data.genre_types[i]);
+			}
+			printf("description: %s\n", head->data.description);
+			printf("dir position: %s\n", head->data.dir_position_media);
+			printf("===============DATA ALL: ================\n");
+			head = head->next;
+		}
+	}
+	if (strcmp(choice, "db_pos") == 0) { printf("db_pos: %d\n", head->data.db_position); }
+	if (strcmp(choice, "title") == 0) { printf("Title: %s\n", head->data.title); }
+	if (strcmp(choice, "tmdb_id") == 0) { printf("tmdb_id: %f\n", head->data.tmdb_id); }
+	if (strcmp(choice, "media_type") == 0) { printf("media: %d\n", head->data.media_type); }
+	if (strcmp(choice, "genre") == 0) {
+		for (int i = 0; i < 19; i++) {
+			printf("genre: %d\n", head->data.genre_types[i]);
+		}
+	}
+	if (strcmp(choice, "descr") == 0) { printf("description: %s\n", head->data.description); }
+	if (strcmp(choice, "dir") == 0) { printf("dir position: %s\n", head->data.dir_position_media); }
+}
 
+//might remove
 int title_compare(char* node, char* next_node) {
 	int string_compare = strcmp(node, next_node);
 	if (string_compare < 0) {
@@ -12,6 +42,15 @@ int title_compare(char* node, char* next_node) {
 		return 0; //they match meaning duplicate
 	}
 }
+
+
+
+
+
+
+
+
+
 
 int database_sort_individual(char* database_file) {
 	
@@ -33,7 +72,7 @@ int database_sort_individual(char* database_file) {
 	while ( (fread(&temp, sizeof(MediaData), 1, file)) == 1) {
 		MediaNode* new_node = (MediaNode*)malloc(sizeof(MediaNode));
 		if (new_node == NULL) {
-			perror("Memory allocation failed");
+			perror("MediaData Memory allocation failed");
 			fclose(file);
 			return 0;
 		}
@@ -49,12 +88,16 @@ int database_sort_individual(char* database_file) {
 			tail->next = new_node;
 			tail = new_node;
 		}
+		//DELETE
 		printf("Title order: %s\n", new_node->data.title);
 	}
 
 	fclose(file);
+	
+	//DELETE
 	printf("\n");
-	//Sorts the linked list
+	
+	//============Sorts the linked list=================
 	MediaNode* current = head;
 	MediaNode* prev = head;
 	MediaNode* next_node = head->next;
@@ -68,16 +111,29 @@ int database_sort_individual(char* database_file) {
 		printf("next: %s\n", next_node->data.title);
 		
 		int result = title_compare(current->data.title, next_node->data.title);
+		printf("result %d\n", result);
+		
 		if (result == 2) {
-			//current = next_node->next;
+			if (current == head) {
+				head = next_node;
+				prev = next_node;
+				current->next = next_node->next;
+				next_node->next = current;
+				current = next_node;
+			}
+			else {
+			//current->next = next_node->next;
 			next_node->next = current;
 			prev->next = next_node;
+			current = next_node;
+			}
 		}
 		
 		//for if even or 1
 		if (next_node->next == NULL) {
 			if ((db_pos > 1) && (current != head)) {
 				prev = prev->next;
+				printf("LOOK AT THIS ======?\n");
 			}
 			current = current->next;
 			next_node = current->next;
@@ -89,23 +145,12 @@ int database_sort_individual(char* database_file) {
 		}
 		
 	}
+//========================================================
 
-	//iteration for error checking
-//MediaNode* current2 = head;
-//while (current2 != NULL) {
-//	printf("================DATA read: ================\n");
-//	printf("db_pos: %d\n", current->data.db_position);
-//	printf("Title: %s\n", current->data.title);
-//	printf("tmdb_id: %f\n", current->data.tmdb_id);
-//	printf("media: %d\n", current->data.media_type);
-//	/*for (int i = 0; i < 19; i++) {
-//		printf("genre: %d\n", current->data.genre_types[i]);
-//	}*/
-//	printf("descr: %s\n", current->data.description);
-//	printf("db_pos: %s\n", current->data.dir_position_media);
-//	printf("===============DATA read: ================\n");	
-//	current2 = current->next;
-//}
+
+
+//iteration for error checking
+	print_list(head, "all");
 
 /*
 TODO:
