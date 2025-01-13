@@ -18,6 +18,8 @@ enum ObjectDataType {
     DIR_POS //may not need
 };
 
+
+//This is the genre/number relation for Movies from TMDB as of 1/13/2025
 enum GenreTypeMovie {
     ACTION = 28,
     ADVENTURE = 12,
@@ -58,7 +60,8 @@ void bin_write(char* database_file, MediaNode* head_ref);
 //returns requested info
 MediaNode* search_linked_list_object(void* requested_info, char* designator);
 
-
+//searched sorted binary tree and returns the node
+TreeNode* binary_tree_search(TreeNode* root, char* search_request);
 //TODO
 //void add_to_database();
 //void delete_from_database();

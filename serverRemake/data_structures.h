@@ -62,6 +62,6 @@ TreeNode* sorted_to_bst(MediaNode** source, int start, int end);
 void inorder_traversal_print(TreeNode* root);
 
 //frees mem from a binary tree
-void free_binary_tree(TreeNode* root);
+TreeNode* free_binary_tree(TreeNode* root);
 
 #endif // !DATA_STRUCTURES_H

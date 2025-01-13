@@ -74,3 +74,11 @@ void random_bin_file_create() {
     fclose(file);
 }
 
+
+
+//needs to test searching
+//speed
+//when user input is installed it will need to test that
+//test Memory size?
+//accuracy test? maybe something against a tmdb request to ensure data remains uncorrupted?
+

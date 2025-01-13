@@ -160,6 +160,19 @@ void inorder_traversal_print(TreeNode* root) {
 	inorder_traversal_print(root->right);
 }
 
+TreeNode* free_binary_tree(TreeNode* root) {
+	if (root == NULL) {
+		return NULL;
+	}
+	
+	root->left = free_binary_tree(root->left);
+	root->right = free_binary_tree(root->right);
+
+	free(root);
+	printf("Freeing node with value %s\n", root->data.title);
+	return NULL;
+}
+
 //*********************************************************************
 //*********************************************************************
 

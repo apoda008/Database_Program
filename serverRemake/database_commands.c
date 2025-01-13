@@ -99,9 +99,19 @@ int database_sort_individual(char* database_file) {
 	/*if (head != NULL) {
 		bin_write(database_file, head);
 	}*/
+
+	//SEARCH TEST DELETE
+	TreeNode* result = binary_tree_search(root, "U571");
+	if (result == NULL) {
+		printf("failed search\n");
+	}
+	else {
+	printf("RESULT: %s\n", result->data.title);
+	}
+	
 	
 	free_linked_list(head);
-		
+	free_binary_tree(root);
 	return 1;
 }
 
@@ -154,13 +164,14 @@ int database_sort_all(char* folder_location) {
 
 //------------------------Search Commands------------------------------
 
+//Will keep for now but may not be needed
 MediaNode* search_linked_list_object(char* title) {
 	char file_path[260] = { global_dir_path };
 	char bin_file[6] = "a.bin";
 	bin_file[0] = tolower(title[0]);
 	strcat_s(file_path, 260, "\\");
 	strcat_s(file_path, 260, bin_file);
-	MediaNode* head = bin_read(title);
+	MediaNode* head = bin_read(file_path);
 	
 	while (head != NULL) {
 		if (strcmp(title, head->data.title)) {
@@ -170,5 +181,22 @@ MediaNode* search_linked_list_object(char* title) {
 	}
 }
 	
+//this will need some adjustment to account for when the tree is being read 
+//from memory 
+TreeNode* binary_tree_search(TreeNode* root, char* search_request) {
+	if (root == NULL) {
+		return NULL;
+	}
 
+	int search = strcmp(root->data.title, search_request);
+	if (search == 0) {
+		return root;
+	}
+	else if (search > 0) {
+		return binary_tree_search(root->left, search_request);
+	}
+	else  {
+		return binary_tree_search(root->right, search_request);
+	}
+}
 //---------------------------------------------------------------------
