@@ -33,6 +33,9 @@
     <ClCompile Include="test_suite_db.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="data_structures.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="startup.h">
@@ -48,6 +51,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="test_suite_db.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="data_structures.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

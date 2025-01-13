@@ -131,6 +131,7 @@
   <ItemGroup>
     <ClCompile Include="cJSON.c" />
     <ClCompile Include="database_commands.c" />
+    <ClCompile Include="data_structures.c" />
     <ClCompile Include="main.c">
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">CompileAsC</CompileAs>
     </ClCompile>
@@ -143,6 +144,7 @@
   <ItemGroup>
     <ClInclude Include="cJSON.h" />
     <ClInclude Include="database_commands.h" />
+    <ClInclude Include="data_structures.h" />
     <ClInclude Include="mediaparse.h" />
     <ClInclude Include="startup.h" />
     <ClInclude Include="test_suite_db.h" />

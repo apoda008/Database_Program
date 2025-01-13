@@ -6,21 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-typedef struct MediaData {
-    int db_position;
-    char title[260];
-    double tmdb_id;
-    bool media_type; // (0 or 1) 1 for movie, 0 for show
-    int genre_types[19];
-    char description[2000];
-    char dir_position_media[260];
-} MediaData;
-
-
-typedef struct MediaNode {
-    MediaData data;
-    struct MediaNode* next;
-} MediaNode;
+#include "data_structures.h"
 
 enum ObjectDataType {
     DB_POS,
@@ -54,30 +40,6 @@ enum GenreTypeMovie {
     WESTERN = 37
 };
 
-typedef struct TreeNode {
-    MediaData data;
-    
-    struct TreeNode* left;
-    struct TreeNode* right;
-} TreeNode;
-
-//=========LIST/NODE MANAGEMENT====================
-//function for merge_sort
-void split_list(MediaNode* source, MediaNode** front_ref, MediaNode** back_ref);
-//function for merge_sort
-MediaNode* merge_list(MediaNode* a, MediaNode* b);
-//merge sorts the bin file
-void merge_sort(MediaNode** headRef);
-
-//prints specified information to terminal
-void print_list(MediaNode*, char* choice);
-//frees linked list
-void free_linked_list(MediaNode* header);
-//frees individual node (TODO)
-void free_individual_node(MediaNode* pointer, void* ref_obj);
-//inserts a single node into list
-void insert_node(MediaNode* node);
-
 
 //-------------SORTING COMMANDS---------------------
 //sorts all possible bin files in the folder
@@ -94,9 +56,8 @@ void bin_write(char* database_file, MediaNode* head_ref);
 //------------Search Commands---------------------
 
 //returns requested info
-void* search_database_info(void* requested_info, char* designator);
-//returns entire node
-MediaNode* search_database_obj(void* requested_info);
+MediaNode* search_linked_list_object(void* requested_info, char* designator);
+
 
 //TODO
 //void add_to_database();
