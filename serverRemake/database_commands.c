@@ -1,4 +1,9 @@
 #include "database_commands.h"
+
+int db_count_global;
+char global_dir_path[260];
+
+
 /////////////////////////READ/WRITE////////////////////////////////////
 MediaNode* bin_read(char* database_file) {
 	printf("DATABASE FILE: %s\n", database_file);
@@ -51,9 +56,14 @@ void bin_write(char* database_file, MediaNode* head_ref) {
 	while (current != NULL) {
 		current->data.db_position = db_num;
 		db_num += 1;
+		//delete
+		printf("db_num in obj: %d", current->data.db_position);
 		fwrite(&current->data, sizeof(MediaData), 1, file);
 		current = current->next;
 	}
+
+	//THE WAY TO FIND GLOBAL WILL NEED TO BE FIXED -UPDATE-
+	db_count_global = db_num;
 
 	fclose(file);
 }
@@ -148,6 +158,7 @@ MediaNode* merge_list(MediaNode* a, MediaNode* b) {
 
 	MediaNode* result = NULL;
 
+	//this part will need adjustment if comparison parameters chage 
 	if (strcmp(a->data.title, b->data.title) <= 0) {
 		result = a;
 		result->next = merge_list(a->next, b);
@@ -178,6 +189,43 @@ void merge_sort(MediaNode** headRef) {
 	*headRef = merge_list(front, back);
 	
 }
+//---------------------------TREES????-------------------------------------------
+TreeNode* create_tree_node(MediaData item) {
+	TreeNode* new_node = (TreeNode*)malloc(sizeof(TreeNode));
+	new_node->data = item;
+	new_node->left = NULL;
+	new_node->right = NULL;
+	return new_node;
+}
+
+
+TreeNode* sorted_to_bst(MediaNode** source, int start, int end) {
+	if (start > end) {
+		return NULL;
+	}
+	MediaNode* current = source;
+	int mid = start + (end - start) / 2;
+	TreeNode* left = sorted_to_bst(source, start, mid - 1);
+	TreeNode* root = create_tree_node((*source)->data);
+	root->left = left;
+	*source = (*source)->next;
+	root->right = sorted_to_bst(source, mid + 1, end);
+
+	return root;
+
+}
+
+void inorder_traversal(TreeNode* root) {
+	if (root == NULL) {
+		return;
+	}
+	printf("ROOT: Title: %s\n", root->data.title);
+	inorder_traversal(root->left);
+
+	printf("Title: %s\n", root->data.title);
+	
+	inorder_traversal(root->right);
+}
 
 //*********************************************************************
 //*********************************************************************
@@ -186,16 +234,28 @@ void merge_sort(MediaNode** headRef) {
 /*
 ##########################SORTING COMMANDS#############################
 */
-
 int database_sort_individual(char* database_file) {
 		
 	MediaNode* head = bin_read(database_file);
 
 	merge_sort(&head);
 	
-	if (head != NULL) {
-		bin_write(database_file, head);
+	//Temporary solution until a global int size can be developed
+	MediaNode* current = head;
+	int n = 0;
+	while (current != NULL) {
+		printf("TITLE ORDERED : % s\n", current->data.title);
+		n += 1;
+		current = current->next;
 	}
+
+	//printf("GLOBAL %d", db_count_global);
+	TreeNode* root = sorted_to_bst(&head, 0, n - 1);
+	inorder_traversal(root);
+
+	/*if (head != NULL) {
+		bin_write(database_file, head);
+	}*/
 	
 	free_linked_list(head);
 		
@@ -206,9 +266,13 @@ int database_sort_all(char* folder_location) {
 	/*
 	TODO:
 	will need adjust for non alphabet characters.
+	consider designing like SQL
+	may need additional DB files such as genre, movie/show, description
 	*/
 
-
+	//assigns global dir path for searching
+	strcpy_s(global_dir_path, 260, folder_location);
+	
 	//might need adjustment for unknowns (numbers/symbols)
 	printf("Sorting all Database files\n\n");
 
@@ -224,10 +288,11 @@ int database_sort_all(char* folder_location) {
 		file_name[0] = alphabet[i];
 		strcat_s(file_first, 260, "\\");
 		strcat_s(file_first, 260, file_name);
-		
+
 		//DELETE
 		printf("strcat %s\n", file_first);
-		
+		printf("GLOBAL: %s\n", global_dir_path);
+
 		if ((database_sort_individual(&file_first)) == 1) {
 			printf("Database_sort completed\n");
 		}
@@ -246,7 +311,22 @@ int database_sort_all(char* folder_location) {
 
 //------------------------Search Commands------------------------------
 
-void* search_database_info(void* requested_info);
+MediaNode* search_linked_list_object(char* title) {
+	char file_path[260] = global_dir_path;
+	char bin_file[6] = "a.bin";
+	bin_file[0] = tolower(title[0]);
+	strcat_s(file_path, 260, "\\");
+	strcat_s(file_path, 260, bin_file);
+	MediaNode* head = bin_read(title);
+	
+	while (head != NULL) {
+		if (strcmp(title, head->data.title)) {
+			return head;
+		}
+		head = head->next;
+	}
+}
+	
 MediaNode* search_database_obj(void* requested_info);
 
 //---------------------------------------------------------------------

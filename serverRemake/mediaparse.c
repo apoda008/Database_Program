@@ -196,6 +196,7 @@ void media_write(cJSON* title, cJSON* description, cJSON* id, cJSON* genre_ids, 
     strcat_s(file_buffer, MAX_PATH, "\\");
     strcat_s(file_buffer, MAX_PATH, filename);
     
+    //DELETE
     printf("FILE_BUFFER: %s\n", file_buffer);
 
     bool is_movie = false;
@@ -203,8 +204,6 @@ void media_write(cJSON* title, cJSON* description, cJSON* id, cJSON* genre_ids, 
     if (!strcmp(media_type->valuestring, "movie")) {
         is_movie = true;
     }
-    
-    //DIR NEEDS FILENAME WITH IT (CONCAT)
    
     MediaData temp = { 52, "", id->valuedouble, is_movie, {0}, "", ""};
 
@@ -218,6 +217,8 @@ void media_write(cJSON* title, cJSON* description, cJSON* id, cJSON* genre_ids, 
         temp.genre_types[i] = (int)genre_number->valuedouble;
         i++;
     }
+
+    //DELETE
     printf("\n");
     
     cJSON_Delete(genre_number);
@@ -236,7 +237,6 @@ void media_write(cJSON* title, cJSON* description, cJSON* id, cJSON* genre_ids, 
 
     fclose(file);
 
-    ////////////////////END OF FILE WRITE//////////////////////////////////////
 }//end of media_write
 ///////////////////////////////////////////////////////////////
 
