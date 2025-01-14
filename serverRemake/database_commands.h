@@ -68,7 +68,7 @@ TreeNode* binary_tree_search(TreeNode* root, char* search_request);
 //void search_database();
 //void adjust_info();
 //void delete_bin();
-
+void input_parsing(char* user_input);
 
 
 
