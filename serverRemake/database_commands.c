@@ -203,69 +203,11 @@ TreeNode* binary_tree_search(TreeNode* root, char* search_request) {
 }
 //---------------------------------------------------------------------
 
-void input_parsing(char* user_input) {
-	/*
-	SELECT ***** FROM
-	SEARCH ***** FROM *****
-	CHANGE (detail) IN (obj) FROM (file)
-	DELETE (detail) IN (obj) FROM (file)
-
-	IN - specifies specific obj 
-	FROM - specifies specific file/type
-
-	*/
-	char* context;
-	char query[260];
-	char obj[260];
-	char file[260];
-
-	char* token = strtok_s(user_input, " ", &context);
-	int tracker = 0;
-	while (token != NULL) {
-		printf("Token: %s\n", token);
-		
-		//needs to grab first case of string (command)
-		//tracker ensures its just checking command
-		if (tracker == 0) {
-			if (strcmp(token, "SELECT") == 0) {
-				//do a thing
-			}
-		}
-		if (tracker == 1) {
-			//grabs requested string
-			strcpy_s(query, token, 260);
-		}
-		if (tracker == 2) {
-			if (strcmp(token, "IN") == 0) {
-				//do a thing
-			}
-			else {
-				//fail
-			}
-			if (strcmp(token, "FROM") == 0) {
-				//do a thing
-			}
-			else {
-				
-			}
-		}
-		if (tracker == 3) {
-			//could be file or obj
-		}
-		if (tracker == 4) {
-			if (strcmp(token, "FROM") == 0) {
-				//do a thing
-			}
-			else {
-				//fail
-			}
-		}
-		if (tracker == 5) {
-			//file grab
-		}
-
-
-		tracker += 1;
-		token = strtok_s(NULL, " ", &context);
-	}
+void input_string_parsing(char* user_input) {
+	//SEARCH 
+	//ADD
+	//DELETE
+	//RENAME
+	//CHANGE DESCRIPTION
+	//
 }

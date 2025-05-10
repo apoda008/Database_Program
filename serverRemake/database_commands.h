@@ -46,7 +46,7 @@ enum GenreTypeMovie {
 //-------------SORTING COMMANDS---------------------
 //sorts all possible bin files in the folder
 int database_sort_all(char* folder_location);
-//sorts a specified bin file
+//sorts a specified .bin file
 int database_sort_individual(char* database_file);
 
 //------------FILE MANAGEMENT---------------------
@@ -68,7 +68,9 @@ TreeNode* binary_tree_search(TreeNode* root, char* search_request);
 //void search_database();
 //void adjust_info();
 //void delete_bin();
-void input_parsing(char* user_input);
+
+//Parses input string for function execution
+void input_string_parsing(char* user_input);
 
 
 
