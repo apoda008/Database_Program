@@ -204,10 +204,23 @@ TreeNode* binary_tree_search(TreeNode* root, char* search_request) {
 //---------------------------------------------------------------------
 
 void input_string_parsing(char* user_input) {
-	//SEARCH 
-	//ADD
-	//DELETE
-	//RENAME
-	//CHANGE DESCRIPTION
-	//
+	/*
+	ADD
+	RENAME
+	CHANGE DESCRIPTION
+	DELETE
+
+	*/
+	char* context;
+	char* token = strtok_s(user_input, " ", &context);
+
+	int tracker = 0;
+	while (token != NULL) {
+		if (token == "ADD") {
+			
+		}
+
+		tracker += 1;
+		token = strtok_s(NULL, " ", &context);
+	}
 }

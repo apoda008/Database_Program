@@ -64,8 +64,17 @@ void print_list(MediaNode* head, char* choice) {
 	}
 }
 
-void insert_node(MediaNode* node) {
-	//TODO:
+void insert_node_LL(MediaNode* node, MediaNode* header) {
+	MediaNode* start = header;
+	
+	while (header != NULL) {
+		if (strcmp(node->data.title, node->data.title) > 0) {
+			node->next = start->next;
+			start->next = node;
+			break;
+		}
+		start = start->next;
+	}
 }
 
 void split_list(MediaNode* source, MediaNode** front_ref, MediaNode** back_ref) {

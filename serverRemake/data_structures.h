@@ -41,6 +41,9 @@ MediaNode* merge_list(MediaNode* a, MediaNode* b);
 //merge sorts the bin file
 void merge_sort(MediaNode** headRef);
 
+//MAYBE??
+void insert_node_LL(MediaNode* source);
+//Prints list
 void print_list(MediaNode*, char* choice);
 //frees linked list
 void free_linked_list(MediaNode* header);
