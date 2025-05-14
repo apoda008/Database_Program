@@ -1,4 +1,4 @@
-#include "database_commands.h"
+#include "database_functions.h"
 
 
 //problem is that it is being assigned during re-writing to bin
@@ -97,7 +97,7 @@ int database_sort_individual(char* database_file) {
 	//printf("GLOBAL %d", db_count_global);
 	TreeNode* root = sorted_to_bst(&head, 0, n - 1);
 	inorder_traversal_print(root);
-
+	
 	/*if (head != NULL) {
 		bin_write(database_file, head);
 	}*/
@@ -110,7 +110,7 @@ int database_sort_individual(char* database_file) {
 	else {
 	printf("RESULT: %s\n", result->data.title);
 	}
-	
+	/////////////////////
 	
 	free_linked_list(head);
 	free_binary_tree(root);
@@ -201,14 +201,31 @@ TreeNode* binary_tree_search(TreeNode* root, char* search_request) {
 		return binary_tree_search(root->right, search_request);
 	}
 }
-//---------------------------------------------------------------------
 
-void input_string_parsing(char* user_input) {
+
+//---------------------END SEARCH COMMANDS------------------------------
+
+
+/*
+#####################USER INPUT FUNCTIONS################################
+*/
+MediaNode* get_media(char* title) {
+	//THIS WILL NEED TO BE ADJUSTED WHEN I DECIDE WHICH STRUCTURE TO PUT IT IN
+	return search_linked_list_object(title);
+
+ }
+
+//-----------------END OF USER FUNCTIONS-------------------------------- 
+
+//This is the JSON return API interface. There will be another for the LOCAL 
+cJSON* input_string_parsing(char* user_input) {
 	/*
 	ADD
 	RENAME
 	CHANGE DESCRIPTION
 	DELETE
+	GET
+	
 
 	*/
 	char* context;
@@ -216,10 +233,36 @@ void input_string_parsing(char* user_input) {
 
 	int tracker = 0;
 	while (token != NULL) {
-		if (token == "ADD") {
+		if (strcmp(token, "ADD") == 0) {
+			//TODO  
+			break;
+		}
+		if (strcmp(token, "CHANGE") == 0) {
+			token = strtok_s(NULL, " ", &context);
+			if (strcmp(token, "DESCRIPTION") == 0) {
+				//TODO
+				break;
+			}
+			if (strcmp(token, "TITLE") == 0) {
+				break;
+				//TODO
+			}
+			if (strcmp(token, "GENRE") == 0) {
+				break;
+				//TODO
+			}
+		}		
+		if (strcmp(token, "DELETE") == 0) {
+			//TODO
+		}
+		if (strcmp(token, "GET") == 0) {
+			//TODO:
+			//returns a JSON file
+			token = strtok_s(NULL, " ", &context);
+			get_media(token)
+			
 			
 		}
-
 		tracker += 1;
 		token = strtok_s(NULL, " ", &context);
 	}

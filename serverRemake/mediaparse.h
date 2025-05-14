@@ -9,7 +9,7 @@
 #include "cJSON.h"
 #include <curl/curl.h>
 #include <stdbool.h>
-#include "database_commands.h"
+#include "database_functions.h"
 
 
 struct Memory {

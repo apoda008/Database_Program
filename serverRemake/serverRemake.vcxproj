@@ -130,7 +130,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="cJSON.c" />
-    <ClCompile Include="database_commands.c" />
+    <ClCompile Include="database_functions.c" />
     <ClCompile Include="data_structures.c" />
     <ClCompile Include="main.c">
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">CompileAsC</CompileAs>
@@ -143,7 +143,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="cJSON.h" />
-    <ClInclude Include="database_commands.h" />
+    <ClInclude Include="database_functions.h" />
     <ClInclude Include="data_structures.h" />
     <ClInclude Include="mediaparse.h" />
     <ClInclude Include="startup.h" />

@@ -27,7 +27,7 @@
     <ClCompile Include="cJSON.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="database_commands.c">
+    <ClCompile Include="database_functions.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="test_suite_db.c">
@@ -47,7 +47,7 @@
     <ClInclude Include="cJSON.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="database_commands.h">
+    <ClInclude Include="database_functions.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="test_suite_db.h">

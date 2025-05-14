@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
+#include "cJSON.h"
 #include "data_structures.h"
 
 enum ObjectDataType {
@@ -70,8 +70,9 @@ TreeNode* binary_tree_search(TreeNode* root, char* search_request);
 //void delete_bin();
 
 //Parses input string for function execution
-void input_string_parsing(char* user_input);
-
+cJSON* input_string_parsing(char* user_input);
+//gets the entire node of a requested media
+MediaNode* get_media(char* title);
 
 
 #endif
