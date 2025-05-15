@@ -165,7 +165,7 @@ void information_Request(const char* movie_title, char* dir_position, char* crea
                     /*
                         NOTE: FOR INSTANCES WHERE THE MOVIE INFORMATION RETURNED WAS INCORRECT IT 
                         WILL HAVE TO BE FIXED BY THE USER AT A LATER DATE USING THE TO-BE-IMPLEMENTED 
-                        DATABASE COMMANDS
+                        DATABASE FUNCTIONS
                     */
                 }
             }            
@@ -206,7 +206,7 @@ void media_write(cJSON* title, cJSON* description, cJSON* id, cJSON* genre_ids, 
     }
    
     MediaData temp = { 52, "", id->valuedouble, is_movie, {0}, "", ""};
-
+   
     strcpy_s(temp.title, 260, title->valuestring);
     strcpy_s(temp.description, 2000, description->valuestring);
     strcpy_s(temp.dir_position_media, 260, dir_position);

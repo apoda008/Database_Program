@@ -259,7 +259,7 @@ cJSON* input_string_parsing(char* user_input) {
 			//TODO:
 			//returns a JSON file
 			token = strtok_s(NULL, " ", &context);
-			get_media(token)
+			MediaNode* thing = get_media(token);
 			
 			
 		}

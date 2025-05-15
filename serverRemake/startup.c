@@ -72,7 +72,7 @@ int directorySearch(char* main_start, char* create_folder_location) {
 }
 
 
-void startUp() {
+int startUp() {
 
     //printf("Starting up Media DataBase \n");
     //printf("Please enter the location of the main directory to be added\n");
@@ -134,6 +134,7 @@ void startUp() {
     else {
         printf("Database created \n");
     }
-
+  
+    return 0;
 
 }
