@@ -220,13 +220,14 @@ MediaNode* get_media(char* title) {
 //This is the JSON return API interface. There will be another for the LOCAL 
 cJSON* input_string_parsing(char* user_input) {
 	/*
+	TODO:
+	this will be adjusted after completion of skeleton app server and app
 	ADD
 	RENAME
 	CHANGE DESCRIPTION
 	DELETE
 	GET
 	
-
 	*/
 	char* context;
 	char* token = strtok_s(user_input, " ", &context);
@@ -267,3 +268,15 @@ cJSON* input_string_parsing(char* user_input) {
 		token = strtok_s(NULL, " ", &context);
 	}
 }
+
+/*
+#####################SOCKET//CONNECTION FUNCTIONS###############
+*/
+void api_connection() {
+
+}
+
+
+/*
+#####################END OF CONNECTION ##########################
+*/

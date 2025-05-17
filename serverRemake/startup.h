@@ -12,7 +12,7 @@
 
 
 //request directory file to be searched
-void startUp();
+int startUp();
 
 //takes the requested directory file and searches through for movie files
 int directorySearch(char* mainStart);
