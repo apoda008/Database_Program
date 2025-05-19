@@ -9,6 +9,7 @@
 #include <strsafe.h>
 
 #include <tchar.h>
+#include "database_functions.h"
 
 
 //request directory file to be searched
