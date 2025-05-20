@@ -79,7 +79,7 @@ TreeNode* binary_tree_search(TreeNode* root, char* search_request);
 //void adjust_info();
 //void delete_bin();
 
-//------------Directory--------------------------------
+//------------Directory--------------------------------n
 
 //takes the requested directory file and searches through for movie files
 int directorySearch(char* mainStart, char* create_folder_location);
@@ -88,7 +88,7 @@ int directorySearch(char* mainStart, char* create_folder_location);
 //Parses input string for function execution
 cJSON* input_string_parsing(char* user_input);
 //gets the entire node of a requested media
-MediaNode* get_media(char* title);
+cJSON* get_media(char* title);
 
 //request directory file to be searched
 int startUp();

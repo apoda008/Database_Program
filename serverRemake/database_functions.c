@@ -6,7 +6,7 @@
 int db_count_global;
 
 
-char global_dir_path[260];
+char global_dir_path_bin[MAX_PATH];
 
 
 /////////////////////////READ/WRITE////////////////////////////////////
@@ -125,7 +125,7 @@ int database_sort_all(char* folder_location) {
 	*/
 
 	//assigns global dir path for searching
-	strcpy_s(global_dir_path, 260, folder_location);
+	//strcpy_s(global_dir_path, 260, folder_location);
 	
 	//might need adjustment for unknowns (numbers/symbols)
 	printf("Sorting all Database files\n\n");
@@ -145,7 +145,7 @@ int database_sort_all(char* folder_location) {
 
 		//DELETE
 		printf("strcat %s\n", file_first);
-		printf("GLOBAL: %s\n", global_dir_path);
+		printf("GLOBAL: %s\n", global_dir_path_bin);
 
 		if ((database_sort_individual(&file_first)) == 1) {
 			printf("Database_sort completed\n");
@@ -166,16 +166,26 @@ int database_sort_all(char* folder_location) {
 //------------------------Search Commands------------------------------
 
 //Will keep for now but may not be needed
-MediaNode* search_linked_list_object(char* title) {
-	char file_path[260] = { global_dir_path };
+MediaNode* search_linked_list_object(char* item_to_be_searched) {
+	char file_path[MAX_PATH];
+	strcpy_s(file_path, MAX_PATH, global_dir_path_bin);
 	char bin_file[6] = "a.bin";
-	bin_file[0] = tolower(title[0]);
+	bin_file[0] = tolower(item_to_be_searched[0]);
+	
+	//DELETE
+	//printf("Bin_FILE for SEARCH: %s\n", bin_file);
+	//printf("_FILE_PATH for SEARCH: %s\n", file_path);
+	
 	strcat_s(file_path, 260, "\\");
 	strcat_s(file_path, 260, bin_file);
+	
+	//DELETE
+	printf("FILE_PATH: %s\n", file_path);
+	
 	MediaNode* head = bin_read(file_path);
 	
 	while (head != NULL) {
-		if (strcmp(title, head->data.title)) {
+		if (strcmp(item_to_be_searched, head->data.title) == 0) {
 			return head;
 		}
 		head = head->next;
@@ -208,9 +218,37 @@ TreeNode* binary_tree_search(TreeNode* root, char* search_request) {
 /*
 #####################USER INPUT FUNCTIONS################################
 */
-MediaNode* get_media(char* title) {
-	//THIS WILL NEED TO BE ADJUSTED WHEN I DECIDE WHICH STRUCTURE TO PUT IT IN
-	return search_linked_list_object(title);
+cJSON* get_media(const char* title) {
+	/*for simplicity right now it is done in Link Lists
+	* in the future this will more than likely be adjusted to 
+	* binary trees
+	*/
+	MediaNode* new_node = search_linked_list_object(title);
+
+	cJSON* json_node = cJSON_CreateObject();
+	if (!json_node) {
+		printf("JSON initialization failed\n");
+		return NULL;
+	}
+	cJSON_AddNumberToObject(json_node, "db_position", new_node->data.db_position);
+	cJSON_AddStringToObject(json_node, "title", new_node->data.title);
+	cJSON_AddNumberToObject(json_node, "tmdb_id", new_node->data.tmdb_id);
+	cJSON_AddBoolToObject(json_node, "media_type", new_node->data.media_type);
+	
+	cJSON* genre_array = cJSON_CreateIntArray(new_node->data.genre_types, 19);
+	if (!genre_array) {
+		printf("Array generation failed\n");
+		cJSON_Delete(json_node);
+		return NULL;
+	}
+
+	cJSON_AddStringToObject(json_node, "description", new_node->data.description);
+	cJSON_AddStringToObject(json_node, "dir_position_media", new_node->data.dir_position_media);
+
+	char* j_print = cJSON_Print(json_node);
+	printf("JSON: %s", j_print);
+
+	return json_node;
 
  }
 
@@ -230,7 +268,7 @@ cJSON* input_string_parsing(char* user_input) {
 	*/
 	char* context;
 	char* token = strtok_s(user_input, " ", &context);
-
+	printf("1st token: %s\n", token);
 	int tracker = 0;
 	while (token != NULL) {
 		if (strcmp(token, "ADD") == 0) {
@@ -256,12 +294,25 @@ cJSON* input_string_parsing(char* user_input) {
 			//TODO
 		}
 		if (strcmp(token, "GET") == 0) {
-			//TODO:
-			//returns a JSON file
+			/*Next token should be "Title, discription, genre
+			* type, etc. 			
+			*/
 			token = strtok_s(NULL, " ", &context);
-			MediaNode* thing = get_media(token);
-			
-			
+			printf("2nd Token %s\n", token);
+			if (strcmp(token, "TITLE") == 0) {
+				//This will be the title
+				token = strtok_s(NULL, " ", &context);
+				
+				printf("3rd token: %s\n", token);
+				cJSON* parsed_to_json = get_media(token);
+
+				char* j_print = cJSON_Print(parsed_to_json);
+				printf("JSON: %s\n", j_print);
+
+				return parsed_to_json;
+
+
+			}		
 		}
 		tracker += 1;
 		token = strtok_s(NULL, " ", &context);
@@ -272,73 +323,81 @@ cJSON* input_string_parsing(char* user_input) {
 #####################SOCKET//CONNECTION FUNCTIONS###############
 */
 
-//void api_connection() {
-//	//Start of connection
-//	WSADATA wsaData;
-//	SOCKET database_socket, client_socket;
-//	struct sockaddr_in database_addr, client_addr;
-//	int client_len = sizeof(client_addr);
-//	char buffer[1024];
-//
-//	int result = WSAStartup(MAKEWORD(2, 2), &wsaData);
-//	if (result != 0) {
-//		printf("WSAStartup failed: %d\n", result);
-//		return 1;
-//	}
-//
-//	database_socket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-//	if (database_socket == INVALID_SOCKET) {
-//		printf("SOcket failed: %d\n", WSAGetLastError());
-//		WSACleanup();
-//		return 1;
-//	}
-//
-//	database_addr.sin_family = AF_INET;
-//	database_addr.sin_port = htons(5001);
-//	database_addr.sin_addr.s_addr = INADDR_ANY;
-//
-//	if (bind(database_socket, (SOCKADDR*)&database_addr, sizeof(database_addr)) == SOCKET_ERROR) {
-//		printf("Bind Failed: %d\n", WSAGetLastError());
-//		closesocket(database_socket);
-//		return 1;
-//	}
-//	//WTF IS IS EVEN SOMAXCONN
-//	//WHY DOES WINDOWS SUCK ASS TO CODE IN???
-//	listen(database_socket, SOMAXCONN);
-//
-//	printf("Database Online \n");
-//
-//	client_socket = accept(database_socket, (SOCKADDR*)&client_addr, &client_len);
-//	if (client_socket == INVALID_SOCKET) {
-//		printf("Accept failed: %d \n", WSAGetLastError());
-//		closesocket(database_socket);
-//		WSACleanup();
-//		return 1;
-//	}
-//
-//	//printf("Connected to client: %s\n", InetNtop(client_addr.sin_addr));
-//
-//	int bytes_received = recv(client_socket, buffer, sizeof(buffer) - 1, 0);
-//	if (bytes_received > 0) {
-//		//this is where i will need to call the input parsing  
-//		//which will take in the request for whatever media info 
-//		//it wants
-//		buffer[bytes_received] = "\0";
-//		printf("Received: %s\n", buffer);
-//
-//		
-//		//This is where it will be sent back
-//		//might consider using cURL
-//		
-//		send(client_socket, "Hello", 17, 0);
-//	}
-//
-//	closesocket(client_socket);
-//	closesocket(database_socket);
-//
-//	return 0;
-//
-//}
+void api_connection() {
+	//Start of connection
+	WSADATA wsaData;
+	SOCKET database_socket, client_socket;
+	struct sockaddr_in database_addr, client_addr;
+	int client_len = sizeof(client_addr);
+	char buffer[1024] = { 0 };
+
+	int result = WSAStartup(MAKEWORD(2, 2), &wsaData);
+	if (result != 0) {
+		printf("WSAStartup failed: %d\n", result);
+		return 1;
+	}
+
+	database_socket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+	if (database_socket == INVALID_SOCKET) {
+		printf("Socket failed: %d\n", WSAGetLastError());
+		WSACleanup();
+		return 1;
+	}
+
+	database_addr.sin_family = AF_INET;
+	database_addr.sin_port = htons(5001);
+	//database_addr.sin_addr.s_addr = INADDR_ANY;
+	
+	//this will need to be adjusted for flexibilty;
+	inet_pton(AF_INET, "192.168.4.81", &database_addr.sin_addr);
+
+	if (bind(database_socket, (SOCKADDR*)&database_addr, sizeof(database_addr)) == SOCKET_ERROR) {
+		printf("Bind Failed: %d\n", WSAGetLastError());
+		closesocket(database_socket);
+		return 1;
+	}
+	//WTF IS IS EVEN SOMAXCONN
+	//WHY DOES WINDOWS SUCK ASS TO CODE IN???
+	listen(database_socket, SOMAXCONN);
+
+	printf("Database Online \n\n");
+
+	client_socket = accept(database_socket, (SOCKADDR*)&client_addr, &client_len);
+	if (client_socket == INVALID_SOCKET) {
+		printf("Accept failed: %d \n", WSAGetLastError());
+		closesocket(database_socket);
+		WSACleanup();
+		return 1;
+	}
+
+	//printf("Connected to client: %s\n", InetNtop(client_addr.sin_addr));
+	while (1) {
+		int bytes_received = recv(client_socket, buffer, sizeof(buffer) - 1, 0);
+		if (bytes_received > 0) {
+			//this is where i will need to call the input parsing  
+			//which will take in the request for whatever media info 
+			//it wants
+			buffer[bytes_received] = "\0";
+			printf("Received: %s\n", buffer);
+
+			if (strcmp(buffer, "EXIT") == 0) {
+				break;
+			}
+
+			cJSON* result = input_string_parsing(buffer);
+			char* j_print = cJSON_Print(result);
+			printf("sending (as JSON) %s\n", j_print);
+			send(client_socket, result, sizeof(result), 0);
+			//send(client_socket, "Hello", 6, 0);
+		}
+	}
+
+	closesocket(client_socket);
+	closesocket(database_socket);
+
+	return 0;
+
+}
 
 
 /*
@@ -476,7 +535,7 @@ int startUp() {
 	StringCchCopy(test_Dir, MAX_PATH, TEXT("C:\\Users\\dan_a\\Desktop\\Personal_Projects\\HomeServerProject\\testdirfolder"));
 	_tprintf(TEXT("The Inputed String: %s\n"), test_Dir);
 	/////////////////////////////////////////////////////////
-	if (directorySearch(test_Dir, folder_creation_stand_in) != 1) {
+	if (directorySearch(test_Dir, folder_creation_stand_in) != 0) {
 		printf("Database creation failed \n");
 	}
 	else {
@@ -580,7 +639,7 @@ void information_Request(const char* movie_title, char* dir_position, char* crea
 	//in real implentation this will ask for the users key
 	FILE* file = fopen("C:\\Users\\dan_a\\Desktop\\key.txt", "r");
 	if (file == NULL) {
-		perror("TEMP FILE FAILED");
+		perror("TEMP FILE FAILED\n");
 	}
 	char authorization[267] = "";
 
@@ -592,7 +651,7 @@ void information_Request(const char* movie_title, char* dir_position, char* crea
 
 	char search_buffer[260] = "";
 	snprintf(search_buffer, sizeof(search_buffer), "https://api.themoviedb.org/3/search/multi?query=%s&include_adult=false&language=en-US", movie_title);
-
+	
 	if (!hnd) {
 		fprintf(stderr, "Error with curl initialization \n");
 		return 0;
@@ -618,7 +677,7 @@ void information_Request(const char* movie_title, char* dir_position, char* crea
 	curl_easy_setopt(hnd, CURLOPT_HTTPHEADER, headers);
 
 	CURLcode ret = curl_easy_perform(hnd);
-
+	
 	if (ret != CURLE_OK) {
 		fprintf(stderr, "curl_easy_perform() failed: %s\n", curl_easy_strerror(ret));
 	}
@@ -645,14 +704,23 @@ void information_Request(const char* movie_title, char* dir_position, char* crea
 
 				//grab first response and break out of loop
 				cJSON_ArrayForEach(movie, results) {
-					cJSON* title = cJSON_GetObjectItemCaseSensitive(movie, "title");
+					//DELETE
+					//char* json_str2 = cJSON_Print(movie);
+					//printf("THING: %s\n", json_str2);
+					
+					cJSON* title = cJSON_GetArrayItem(movie, 3);
 					cJSON* description = cJSON_GetObjectItemCaseSensitive(movie, "overview");
 					cJSON* id = cJSON_GetObjectItemCaseSensitive(movie, "id");
 					cJSON* genre_ids = cJSON_GetObjectItemCaseSensitive(movie, "genre_ids");
 					cJSON* media_type = cJSON_GetObjectItemCaseSensitive(movie, "media_type");
-
+					
 					media_write(title, description, id, genre_ids, media_type, dir_position, create_folder_location);
 					break;
+					
+					
+					//media_write(title, description, id, genre_ids, media_type, dir_position, create_folder_location);
+					
+				
 					/*
 						NOTE: FOR INSTANCES WHERE THE MOVIE INFORMATION RETURNED WAS INCORRECT IT
 						WILL HAVE TO BE FIXED BY THE USER AT A LATER DATE USING THE TO-BE-IMPLEMENTED
@@ -666,30 +734,33 @@ void information_Request(const char* movie_title, char* dir_position, char* crea
 	curl_easy_cleanup(hnd);
 	free(response.string);
 
-	return 1;
+	return 0;
 }//end of information_request 
 
 ///////////////////////////////////////////////////////////////
 void media_write(cJSON* title, cJSON* description, cJSON* id, cJSON* genre_ids, cJSON* media_type, char* dir_position, char* create_folder_location) {
 	char* first_char_string = title->valuestring;
-	char filename[6];
-
+	char filename[6] = "a.bin";
+	
 	//because strcat is a bitch
 	filename[0] = tolower(first_char_string[0]);
-	filename[1] = '.';
-	filename[2] = 'b';
-	filename[3] = 'i';
-	filename[4] = 'n';
-	filename[5] = '\0';
-
+	
 	char file_buffer[MAX_PATH] = "";
 	strcat_s(file_buffer, MAX_PATH, create_folder_location);
 	strcat_s(file_buffer, MAX_PATH, "\\");
+
+	//set global bin file path for quick reference 
+	strcpy_s(global_dir_path_bin, MAX_PATH, file_buffer);
+	
 	strcat_s(file_buffer, MAX_PATH, filename);
 
 	//DELETE
 	printf("FILE_BUFFER: %s\n", file_buffer);
 
+	//set global bin file path for quick reference 
+	
+	printf("GLOBAL DIR PATH: %s", global_dir_path_bin);
+	
 	bool is_movie = false;
 
 	if (!strcmp(media_type->valuestring, "movie")) {
