@@ -29,6 +29,11 @@ typedef struct TreeNode {
     struct TreeNode* right;
 } TreeNode;
 
+
+struct Memory {
+    char* string;
+    size_t size;
+};
 /*
 ===========LINKED LIST==================
 */

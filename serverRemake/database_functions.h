@@ -5,10 +5,18 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <winsock2.h>
-#include <ws2tcpip.h>
+#include <stdint.h>
 #include "cJSON.h"
 #include "data_structures.h"
+#include <winsock2.h>
+#include <ws2tcpip.h>
+#pragma comment(lib, "Ws2_32.lib")
+#include <tchar.h>
+#include <windows.h>
+#include <strsafe.h>
+#include <ctype.h>
+#include "cJSON.h"
+#include <curl/curl.h>
 
 enum ObjectDataType {
     DB_POS,
@@ -71,10 +79,33 @@ TreeNode* binary_tree_search(TreeNode* root, char* search_request);
 //void adjust_info();
 //void delete_bin();
 
+//------------Directory--------------------------------
+
+//takes the requested directory file and searches through for movie files
+int directorySearch(char* mainStart, char* create_folder_location);
+
+//------------MISC -----------------------------------
 //Parses input string for function execution
 cJSON* input_string_parsing(char* user_input);
 //gets the entire node of a requested media
 MediaNode* get_media(char* title);
 
+//request directory file to be searched
+int startUp();
 
-#endif
+//ALL THE CRAP FROM MEDIAPARSE.H 
+
+
+//cleans up the title for TMDB api request
+void parse_for_database(char* filename, char* dir_position, char* create_folder_location);
+
+//makes TMDB request for cursory information
+void information_Request(const char* movie_title, char* dir_position, char* create_folder_location);
+
+int genre_parsing(char* int_arry);
+
+//writes to a db file
+void media_write(cJSON* title, cJSON* description, cJSON* id, cJSON* genre_ids, cJSON* media_type, char* dir_position, char* create_folder_location);
+
+
+#endif //END

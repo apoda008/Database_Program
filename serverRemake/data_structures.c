@@ -177,8 +177,9 @@ TreeNode* free_binary_tree(TreeNode* root) {
 	root->left = free_binary_tree(root->left);
 	root->right = free_binary_tree(root->right);
 
-	free(root);
 	printf("Freeing node with value %s\n", root->data.title);
+	free(root);
+	
 	return NULL;
 }
 

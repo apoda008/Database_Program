@@ -53,7 +53,6 @@ void bin_write(char* database_file, MediaNode* head_ref) {
 	FILE* file = fopen(database_file, "wb");
 	if (file == NULL) {
 		perror("Failed to open write file.");
-		return 0;
 	}
 
 	int db_num = 1;
@@ -272,11 +271,464 @@ cJSON* input_string_parsing(char* user_input) {
 /*
 #####################SOCKET//CONNECTION FUNCTIONS###############
 */
-void api_connection() {
 
-}
+//void api_connection() {
+//	//Start of connection
+//	WSADATA wsaData;
+//	SOCKET database_socket, client_socket;
+//	struct sockaddr_in database_addr, client_addr;
+//	int client_len = sizeof(client_addr);
+//	char buffer[1024];
+//
+//	int result = WSAStartup(MAKEWORD(2, 2), &wsaData);
+//	if (result != 0) {
+//		printf("WSAStartup failed: %d\n", result);
+//		return 1;
+//	}
+//
+//	database_socket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+//	if (database_socket == INVALID_SOCKET) {
+//		printf("SOcket failed: %d\n", WSAGetLastError());
+//		WSACleanup();
+//		return 1;
+//	}
+//
+//	database_addr.sin_family = AF_INET;
+//	database_addr.sin_port = htons(5001);
+//	database_addr.sin_addr.s_addr = INADDR_ANY;
+//
+//	if (bind(database_socket, (SOCKADDR*)&database_addr, sizeof(database_addr)) == SOCKET_ERROR) {
+//		printf("Bind Failed: %d\n", WSAGetLastError());
+//		closesocket(database_socket);
+//		return 1;
+//	}
+//	//WTF IS IS EVEN SOMAXCONN
+//	//WHY DOES WINDOWS SUCK ASS TO CODE IN???
+//	listen(database_socket, SOMAXCONN);
+//
+//	printf("Database Online \n");
+//
+//	client_socket = accept(database_socket, (SOCKADDR*)&client_addr, &client_len);
+//	if (client_socket == INVALID_SOCKET) {
+//		printf("Accept failed: %d \n", WSAGetLastError());
+//		closesocket(database_socket);
+//		WSACleanup();
+//		return 1;
+//	}
+//
+//	//printf("Connected to client: %s\n", InetNtop(client_addr.sin_addr));
+//
+//	int bytes_received = recv(client_socket, buffer, sizeof(buffer) - 1, 0);
+//	if (bytes_received > 0) {
+//		//this is where i will need to call the input parsing  
+//		//which will take in the request for whatever media info 
+//		//it wants
+//		buffer[bytes_received] = "\0";
+//		printf("Received: %s\n", buffer);
+//
+//		
+//		//This is where it will be sent back
+//		//might consider using cURL
+//		
+//		send(client_socket, "Hello", 17, 0);
+//	}
+//
+//	closesocket(client_socket);
+//	closesocket(database_socket);
+//
+//	return 0;
+//
+//}
 
 
 /*
 #####################END OF CONNECTION ##########################
 */
+///////////////////////DIRECTORY STUFF///////////////////////////
+
+int directorySearch(char* main_start, char* create_folder_location) {
+
+
+	TCHAR dir_for_search[MAX_PATH];
+
+	//To pass into parse_for_database
+	char* dir_path[MAX_PATH];
+	char* folder_path[MAX_PATH];
+	int sizeNeeded = WideCharToMultiByte(CP_UTF8, 0, main_start, -1, dir_path, sizeof(dir_path), NULL, NULL);
+	int sizeNeeded_folder = WideCharToMultiByte(CP_UTF8, 0, create_folder_location, -1, folder_path, sizeof(folder_path), NULL, NULL);
+
+	errno_t result = _tcscpy_s(dir_for_search, _countof(dir_for_search), main_start);
+
+	//concats wildcard (*) for full search
+	StringCchCat(main_start, MAX_PATH, TEXT("\\*"));
+
+	WIN32_FIND_DATA findFileData;
+	HANDLE hFind = FindFirstFile(main_start, &findFileData);
+
+	//DELETE 
+	_tprintf(TEXT("the thing directory: %s\n"), main_start);
+
+
+	if (hFind == INVALID_HANDLE_VALUE) {
+		printf("error handle value. Error: %lu\n", GetLastError());
+		return 1;
+	}
+	else {
+		do {
+
+			//skip "." ".." file names
+			if ((strcmp(findFileData.cFileName, ".") == 0) || (strcmp(findFileData.cFileName, "..") == 0)) {
+				continue;
+			}
+
+			//puts the string into a readable form for directory and file names
+			char narrowDir[MAX_PATH];
+			size_t convertedChars = 0;
+			wcstombs_s(&convertedChars, narrowDir, sizeof(narrowDir), findFileData.cFileName, _TRUNCATE);
+
+
+			// Check if it's a directory or file
+			if (findFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
+				printf("[DIR]  %s\n", narrowDir);
+
+				StringCchCat(dir_for_search, MAX_PATH, TEXT("\\"));
+				StringCchCat(dir_for_search, MAX_PATH, findFileData.cFileName);
+
+				directorySearch(&dir_for_search, create_folder_location);
+
+			}
+			else {
+				printf("[FILE] %s\n", narrowDir);
+
+				parse_for_database(narrowDir, dir_path, folder_path);
+			}
+
+
+		} while (FindNextFile(hFind, &findFileData) != 0); //this moves it to the next file
+
+		if (GetLastError() != ERROR_NO_MORE_FILES) {
+			printf("FindNextFile Failed (%d)\n", GetLastError());
+		}
+
+		FindClose(hFind);
+	}
+
+
+	return 0;
+}
+
+//////////////////////END OF DIRECTORY///////////////////////////
+
+//--------------------MISC FUNCTION-----------------------------
+int startUp() {
+
+	//printf("Starting up Media DataBase \n");
+	//printf("Please enter the location of the main directory to be added\n");
+	////scanf_s("%100s", userInput);
+	////printf("Format: C:directory\...\n");
+	//printf("scanning...\n");
+	//printf("\n");
+
+	/*
+		Will need to ask if it a show/movie folder
+		unforunately there is no way currently to get that
+		information just from the media files themselves. At
+		least not consistently
+	*/
+
+
+	//THIS CAN PROBABLY BE DELETED
+	//char cwd[FILENAME_MAX];
+	//if (_getcwd(cwd, sizeof(cwd)) != NULL) {
+	//    printf("Current working directory: %s\n", cwd);
+	//}
+	//else {
+	//    perror("getcwd() error");
+	//}
+	//Folder creation
+	TCHAR folder_creation_stand_in[MAX_PATH];
+
+	StringCchCopy(folder_creation_stand_in, MAX_PATH, TEXT("C:\\Users\\dan_a\\Desktop\\Database_folder"));
+	//wchar_t folder_creation_stand_in[MAX_PATH] = L"C:\\Users\\dan_a\\Desktop\\Database_folder";
+
+	if (CreateDirectory(folder_creation_stand_in, NULL)) {
+		_tprintf(TEXT("Folder created successfully: %s\n"), folder_creation_stand_in);
+
+	}
+	else {
+		DWORD error = GetLastError();
+		if (error == ERROR_ALREADY_EXISTS) {
+			_tprintf(TEXT("Folder already exists: %s\n"), folder_creation_stand_in);
+			//printf("Folder already created: %s\n", folder_creation_stand_in);
+		}
+		else {
+			_tprintf(TEXT("failed: %s\n"), folder_creation_stand_in);
+			//printf("Failed to create folder. Error Code: %lu\n", error);
+		}
+	}
+
+
+
+
+	//THIS WILL PROBABLY BE ADJUSTED WHEN ASKING FOR USER INPUT
+	TCHAR test_Dir[MAX_PATH];
+
+	StringCchCopy(test_Dir, MAX_PATH, TEXT("C:\\Users\\dan_a\\Desktop\\Personal_Projects\\HomeServerProject\\testdirfolder"));
+	_tprintf(TEXT("The Inputed String: %s\n"), test_Dir);
+	/////////////////////////////////////////////////////////
+	if (directorySearch(test_Dir, folder_creation_stand_in) != 1) {
+		printf("Database creation failed \n");
+	}
+	else {
+		printf("Database created \n");
+	}
+
+	return 0;
+
+}
+
+//--------------------------------------------------------------
+
+//---------------------MEDIA PARSE FUNCTIONS--------------------
+
+//cleans up the title for TMDB api request
+void parse_for_database(char* filename, char* dir_position, char* create_folder_location) {
+	size_t nameLen = strlen(filename);
+	char newFileName[260];
+
+	/*
+	TODO:
+	File verification: make sure file is of a media type (.avi, .mkv, etc)
+	tracker of those failed files (number/location?)
+	maybe move them to a separate folder?
+	the steralization will also need adjustment for characters such as '_'
+	*/
+
+	for (int i = 0; i < (nameLen - 3); i++) {
+		if (filename[i] == '.') {
+			newFileName[i] = ' ';
+			if ((isdigit(filename[i + 1])) && (isdigit(filename[i + 2])) && (isdigit(filename[i + 3]))) {
+				newFileName[i] = '\0';
+				break;
+			}
+		}
+		else if (filename[i] == '(') {
+			newFileName[i] = '\0';
+			break;
+		}
+		else {
+			newFileName[i] = filename[i];
+		}
+	}
+	//removes .filetype
+	newFileName[nameLen - 3] = '\0';
+
+	char buffertwo[260];
+	size_t j = 0;
+
+	for (int i = 0; i < nameLen; i++) {
+		if ((newFileName[i] == ' ') && (newFileName[i + 1] == '\0')) {
+			break;
+		}
+
+		if ((newFileName[i] == ' ') && (newFileName[i + 1] != '\0')) {
+			buffertwo[j] = '%';
+			buffertwo[j + 1] = '2';
+			buffertwo[j + 2] = '0';
+			j += 3;
+		}
+		else {
+			buffertwo[j] = newFileName[i];
+			j++;
+		}
+
+	}
+	buffertwo[j] = '\0';
+
+	//Will also call the file writing function
+	information_Request(buffertwo, dir_position, create_folder_location);
+
+
+}
+
+//////////////////////////////CURL AND JSON PARSING/////////////////////////////
+
+//allocates memory for incoming response.
+size_t write_chunk(void* data, size_t size, size_t nmemb, void* user_data) {
+	size_t real_size = size * nmemb;
+
+	struct Memory* response = (struct Memory*)user_data;
+
+	char* ptr = realloc(response->string, response->size + real_size + 1);
+
+	if (ptr == NULL) {
+		return CURL_WRITEFUNC_ERROR;
+	}
+
+	response->string = ptr;
+	memcpy(&(response->string[response->size]), data, real_size);
+	response->size += real_size;
+	response->string[response->size] = '\0';
+
+	return real_size;
+}
+
+//sourced by themoviedb.org api system
+void information_Request(const char* movie_title, char* dir_position, char* create_folder_location) {
+
+	//====this is solely to get the key for api call==== 
+	//in real implentation this will ask for the users key
+	FILE* file = fopen("C:\\Users\\dan_a\\Desktop\\key.txt", "r");
+	if (file == NULL) {
+		perror("TEMP FILE FAILED");
+	}
+	char authorization[267] = "";
+
+	fgets(authorization, 267, file);
+	fclose(file);
+	//==================================================
+
+	CURL* hnd = curl_easy_init();
+
+	char search_buffer[260] = "";
+	snprintf(search_buffer, sizeof(search_buffer), "https://api.themoviedb.org/3/search/multi?query=%s&include_adult=false&language=en-US", movie_title);
+
+	if (!hnd) {
+		fprintf(stderr, "Error with curl initialization \n");
+		return 0;
+	}
+
+	//object for response
+	struct Memory response;
+	response.string = malloc(1);
+	response.size = 0;
+
+	curl_easy_setopt(hnd, CURLOPT_CUSTOMREQUEST, "GET");
+	curl_easy_setopt(hnd, CURLOPT_WRITEFUNCTION, write_chunk); //needs to be nulled for stdout
+	curl_easy_setopt(hnd, CURLOPT_WRITEDATA, (void*)&response); //needs to nulled for stdout
+
+	//DELETE strictly for viewing what is being fully returned in the JSON, serves no function to the program overall
+	//curl_easy_setopt(hnd, CURLOPT_WRITEDATA, stdout);
+
+	curl_easy_setopt(hnd, CURLOPT_URL, search_buffer);
+
+	struct curl_slist* headers = NULL;
+	headers = curl_slist_append(headers, "accept: application/json");
+	headers = curl_slist_append(headers, authorization);
+	curl_easy_setopt(hnd, CURLOPT_HTTPHEADER, headers);
+
+	CURLcode ret = curl_easy_perform(hnd);
+
+	if (ret != CURLE_OK) {
+		fprintf(stderr, "curl_easy_perform() failed: %s\n", curl_easy_strerror(ret));
+	}
+	else {
+		//JSON parsing
+		cJSON* tmdb_json = cJSON_Parse(response.string);
+		if (!tmdb_json) {
+			fprintf(stderr, "Error parsing JSON\n");
+			return 0;
+		}
+		else {
+
+			cJSON* results = cJSON_GetObjectItemCaseSensitive(tmdb_json, "results");
+
+			if (cJSON_IsArray) {
+
+				cJSON* movie = NULL;
+
+				/*
+				TODO:
+				will need to implement a query limit since tmdb requests less than 50
+				queries a second
+				*/
+
+				//grab first response and break out of loop
+				cJSON_ArrayForEach(movie, results) {
+					cJSON* title = cJSON_GetObjectItemCaseSensitive(movie, "title");
+					cJSON* description = cJSON_GetObjectItemCaseSensitive(movie, "overview");
+					cJSON* id = cJSON_GetObjectItemCaseSensitive(movie, "id");
+					cJSON* genre_ids = cJSON_GetObjectItemCaseSensitive(movie, "genre_ids");
+					cJSON* media_type = cJSON_GetObjectItemCaseSensitive(movie, "media_type");
+
+					media_write(title, description, id, genre_ids, media_type, dir_position, create_folder_location);
+					break;
+					/*
+						NOTE: FOR INSTANCES WHERE THE MOVIE INFORMATION RETURNED WAS INCORRECT IT
+						WILL HAVE TO BE FIXED BY THE USER AT A LATER DATE USING THE TO-BE-IMPLEMENTED
+						DATABASE FUNCTIONS
+					*/
+				}
+			}
+		}
+	}//end of JSON parsing
+
+	curl_easy_cleanup(hnd);
+	free(response.string);
+
+	return 1;
+}//end of information_request 
+
+///////////////////////////////////////////////////////////////
+void media_write(cJSON* title, cJSON* description, cJSON* id, cJSON* genre_ids, cJSON* media_type, char* dir_position, char* create_folder_location) {
+	char* first_char_string = title->valuestring;
+	char filename[6];
+
+	//because strcat is a bitch
+	filename[0] = tolower(first_char_string[0]);
+	filename[1] = '.';
+	filename[2] = 'b';
+	filename[3] = 'i';
+	filename[4] = 'n';
+	filename[5] = '\0';
+
+	char file_buffer[MAX_PATH] = "";
+	strcat_s(file_buffer, MAX_PATH, create_folder_location);
+	strcat_s(file_buffer, MAX_PATH, "\\");
+	strcat_s(file_buffer, MAX_PATH, filename);
+
+	//DELETE
+	printf("FILE_BUFFER: %s\n", file_buffer);
+
+	bool is_movie = false;
+
+	if (!strcmp(media_type->valuestring, "movie")) {
+		is_movie = true;
+	}
+
+	MediaData temp = { 52, "", id->valuedouble, is_movie, {0}, "", "" };
+
+	strcpy_s(temp.title, 260, title->valuestring);
+	strcpy_s(temp.description, 2000, description->valuestring);
+	strcpy_s(temp.dir_position_media, 260, dir_position);
+
+	cJSON* genre_number;
+	int i = 0;
+	cJSON_ArrayForEach(genre_number, genre_ids) {
+		temp.genre_types[i] = (int)genre_number->valuedouble;
+		i++;
+	}
+
+	//DELETE
+	printf("\n");
+
+	cJSON_Delete(genre_number);
+
+	////////////////FILE WRITE///////////////////////
+
+	FILE* file = fopen(file_buffer, "ab");
+
+	if (file == NULL) {
+		perror("error opening file");
+		return 0;
+	}
+
+	fwrite(&temp, sizeof(MediaData), 1, file);
+
+
+	fclose(file);
+
+}//end of media_write
+///////////////////////////////////////////////////////////////
+
+//--------------------------------------------------------------

@@ -1,14 +1,11 @@
 #ifndef MEDIAPARSE_H
 #define MEDIAPARSE_H
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <stdint.h>
-#include <string.h>
-#include <ctype.h>
-#include "cJSON.h"
-#include <curl/curl.h>
-#include <stdbool.h>
+
+
+
+
+
 #include "database_functions.h"
 
 
