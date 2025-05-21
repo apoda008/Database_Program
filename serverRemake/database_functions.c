@@ -1,10 +1,10 @@
 #include "database_functions.h"
 
-
-//problem is that it is being assigned during re-writing to bin
 //needs to be during creation during or after its sorted
 int db_count_global;
 
+//this is to track the current amount of TMDB requests
+int tmdb_int_global;
 
 char global_dir_path_bin[MAX_PATH];
 
@@ -74,6 +74,7 @@ void bin_write(char* database_file, MediaNode* head_ref) {
 ///////////////////////////////////////////////////////////////////////
 
 /*
+*######################################################################
 ##########################SORTING COMMANDS#############################
 TODO:
 	Still needs to handle duplicates
@@ -160,9 +161,11 @@ int database_sort_all(char* folder_location) {
 }
 
 /*
-##########################SORTING COMMANDS#############################
+####################END OFSORTING COMMANDS#############################
+#######################################################################
 */
 
+//---------------------------------------------------------------------
 //------------------------Search Commands------------------------------
 
 //Will keep for now but may not be needed
@@ -241,12 +244,13 @@ cJSON* get_media(const char* title) {
 		cJSON_Delete(json_node);
 		return NULL;
 	}
-
+	cJSON_AddItemToObject(json_node, "genre_types", genre_array);
 	cJSON_AddStringToObject(json_node, "description", new_node->data.description);
 	cJSON_AddStringToObject(json_node, "dir_position_media", new_node->data.dir_position_media);
 
-	char* j_print = cJSON_Print(json_node);
-	printf("JSON: %s", j_print);
+	//DELETE
+	//char* j_print = cJSON_Print(json_node);
+	//printf("JSON: %s", j_print);
 
 	return json_node;
 
@@ -268,7 +272,10 @@ cJSON* input_string_parsing(char* user_input) {
 	*/
 	char* context;
 	char* token = strtok_s(user_input, " ", &context);
+	
+	//DELETE
 	printf("1st token: %s\n", token);
+	
 	int tracker = 0;
 	while (token != NULL) {
 		if (strcmp(token, "ADD") == 0) {
@@ -298,17 +305,21 @@ cJSON* input_string_parsing(char* user_input) {
 			* type, etc. 			
 			*/
 			token = strtok_s(NULL, " ", &context);
+			
+			//DELETE
 			printf("2nd Token %s\n", token);
+			
 			if (strcmp(token, "TITLE") == 0) {
 				//This will be the title
 				token = strtok_s(NULL, " ", &context);
 				
+				//DELETE
 				printf("3rd token: %s\n", token);
+				
 				cJSON* parsed_to_json = get_media(token);
 
-				char* j_print = cJSON_Print(parsed_to_json);
-				printf("JSON: %s\n", j_print);
-
+				
+				
 				return parsed_to_json;
 
 
@@ -329,7 +340,7 @@ void api_connection() {
 	SOCKET database_socket, client_socket;
 	struct sockaddr_in database_addr, client_addr;
 	int client_len = sizeof(client_addr);
-	char buffer[1024] = { 0 };
+	char buffer[4096] = { 0 };
 
 	int result = WSAStartup(MAKEWORD(2, 2), &wsaData);
 	if (result != 0) {
@@ -370,7 +381,6 @@ void api_connection() {
 		return 1;
 	}
 
-	//printf("Connected to client: %s\n", InetNtop(client_addr.sin_addr));
 	while (1) {
 		int bytes_received = recv(client_socket, buffer, sizeof(buffer) - 1, 0);
 		if (bytes_received > 0) {
@@ -387,7 +397,10 @@ void api_connection() {
 			cJSON* result = input_string_parsing(buffer);
 			char* j_print = cJSON_Print(result);
 			printf("sending (as JSON) %s\n", j_print);
-			send(client_socket, result, sizeof(result), 0);
+			//got to watch buffer size here, it can cut messages short
+			//need to find a better way to dynamically alot the correct 
+			//size for delivery. Hard coding doesn't allow for flexibilty
+			send(client_socket, j_print, 4096, 0);
 			//send(client_socket, "Hello", 6, 0);
 		}
 	}
@@ -479,52 +492,132 @@ int directorySearch(char* main_start, char* create_folder_location) {
 //////////////////////END OF DIRECTORY///////////////////////////
 
 //--------------------MISC FUNCTION-----------------------------
+
+//may solve TCHAR troubles
+//bool convert_char_to_tchar(const char* source, TCHAR* dest, size_t dest_count) {
+//	if (!source || !dest) return false;
+//	
+//#ifdef _UNICODE
+//	size_t converted = 0; 
+//	//this is the function that matters
+//	mbstowcs_s(&converted, dest, dest_count, source, _TRUNCATE);
+//#else 
+//	strncpy_s(dest, dest_count, source, _TRUNCATE);
+//#endif
+//
+//	return true;
+//}
+
+int create_folders(char* input_user_location) {
+	/*This may be possible broken into smaller functions*/
+
+	if (!input_user_location) return 1;
+	TCHAR master_path[MAX_PATH];
+	size_t converted = 0;
+	mbstowcs_s(&converted, master_path, MAX_PATH, input_user_location, _TRUNCATE);
+	_tprintf(_T("Converted path: %s\n"), master_path);
+
+	//DB folder creations
+	if (CreateDirectory(master_path, NULL)) {
+		_tprintf(TEXT("Folder created successfully: %s\n"), master_path);
+	}
+	else {
+		DWORD error = GetLastError();
+		if (error == ERROR_ALREADY_EXISTS) {
+			_tprintf(TEXT("Database folder already exists: %s\n"), master_path);
+		}
+		else {
+			_tprintf(TEXT("failed: %s\n"), master_path);
+			return 1;
+		}
+	}
+	
+	//creates series folder
+	TCHAR series_path[MAX_PATH];
+	_tcscpy_s(series_path, MAX_PATH, master_path);
+
+	_tcscat_s(series_path, MAX_PATH, _T("\\Series"));
+	_tprintf(TEXT("Database folder already exists: %s\n"), series_path);
+	
+	if (CreateDirectory(series_path, NULL)) {
+		_tprintf(TEXT("Series folder created successfully: %s\n"), series_path);
+	}
+	else {
+		DWORD error = GetLastError();
+		if (error == ERROR_ALREADY_EXISTS) {
+			_tprintf(TEXT("Database folder already exists: %s\n"), series_path);
+		}
+		else {
+			_tprintf(TEXT("failed: %s\n"), series_path);
+			return 1;
+		}
+	}
+
+	//creates genre folder
+	TCHAR genre_path[MAX_PATH];
+	_tcscpy_s(genre_path, MAX_PATH, master_path);
+
+	_tcscat_s(genre_path, MAX_PATH, _T("\\Genre"));
+	_tprintf(TEXT("Database folder already exists: %s\n"), genre_path);
+
+	if (CreateDirectory(genre_path, NULL)) {
+		_tprintf(TEXT("Series folder created successfully: %s\n"), genre_path);
+	}
+	else {
+		DWORD error = GetLastError();
+		if (error == ERROR_ALREADY_EXISTS) {
+			_tprintf(TEXT("Database folder already exists: %s\n"), genre_path);
+		}
+		else {
+			_tprintf(TEXT("failed: %s\n"), genre_path);
+			return 1;
+		}
+	}
+
+	return 0;
+}
+
 int startUp() {
-
-	//printf("Starting up Media DataBase \n");
-	//printf("Please enter the location of the main directory to be added\n");
-	////scanf_s("%100s", userInput);
-	////printf("Format: C:directory\...\n");
-	//printf("scanning...\n");
-	//printf("\n");
-
 	/*
-		Will need to ask if it a show/movie folder
-		unforunately there is no way currently to get that
-		information just from the media files themselves. At
-		least not consistently
+		TODO:
+		Make folders for the nodes .bin files 
+		make folder for genre .bin files
+		make temp for error resolution (name collisions or name errors);
 	*/
 
+	TCHAR folder_creation_stand_in_Main[MAX_PATH];
+	StringCchCopy(folder_creation_stand_in_Main, MAX_PATH, TEXT("C:\\Users\\dan_a\\Desktop\\Database_folder"));
+	/*TCHAR new_folder_db_movies[MAX_PATH];
+	TCHAR new_folder_shows[MAX_PATH];
+	TCHAR new_folder_genres[MAX_PATH];*/
+	//theoretically changing this doesn't effect folders father down the line
+	//Database_folder
+		//-database_movies
+		//-database_shows
+		//	
+		//-genres
+			//-comedy
+			//-drama
+			//....
 
-	//THIS CAN PROBABLY BE DELETED
-	//char cwd[FILENAME_MAX];
-	//if (_getcwd(cwd, sizeof(cwd)) != NULL) {
-	//    printf("Current working directory: %s\n", cwd);
-	//}
-	//else {
-	//    perror("getcwd() error");
-	//}
-	//Folder creation
-	TCHAR folder_creation_stand_in[MAX_PATH];
-
-	StringCchCopy(folder_creation_stand_in, MAX_PATH, TEXT("C:\\Users\\dan_a\\Desktop\\Database_folder"));
-	//wchar_t folder_creation_stand_in[MAX_PATH] = L"C:\\Users\\dan_a\\Desktop\\Database_folder";
-
-	if (CreateDirectory(folder_creation_stand_in, NULL)) {
-		_tprintf(TEXT("Folder created successfully: %s\n"), folder_creation_stand_in);
+	//THis causes an abort error and I have no fucking idea why
+	create_folders("C:\\Users\\dan_a\\Desktop\\Database_folder");
+		
+	;
+	/*
+	if (CreateDirectory(folder_creation_stand_in_Main, NULL)) {
+		_tprintf(TEXT("Folder created successfully: %s\n"), folder_creation_stand_in_Main);
 
 	}
 	else {
 		DWORD error = GetLastError();
 		if (error == ERROR_ALREADY_EXISTS) {
-			_tprintf(TEXT("Folder already exists: %s\n"), folder_creation_stand_in);
-			//printf("Folder already created: %s\n", folder_creation_stand_in);
+			_tprintf(TEXT("Folder already exists: %s\n"), folder_creation_stand_in_Main);
 		}
 		else {
-			_tprintf(TEXT("failed: %s\n"), folder_creation_stand_in);
-			//printf("Failed to create folder. Error Code: %lu\n", error);
+			_tprintf(TEXT("failed: %s\n"), folder_creation_stand_in_Main);
 		}
-	}
+	}*/
 
 
 
@@ -534,8 +627,9 @@ int startUp() {
 
 	StringCchCopy(test_Dir, MAX_PATH, TEXT("C:\\Users\\dan_a\\Desktop\\Personal_Projects\\HomeServerProject\\testdirfolder"));
 	_tprintf(TEXT("The Inputed String: %s\n"), test_Dir);
+	
 	/////////////////////////////////////////////////////////
-	if (directorySearch(test_Dir, folder_creation_stand_in) != 0) {
+	if (directorySearch(test_Dir, folder_creation_stand_in_Main) != 0) {
 		printf("Database creation failed \n");
 	}
 	else {
@@ -635,6 +729,13 @@ size_t write_chunk(void* data, size_t size, size_t nmemb, void* user_data) {
 //sourced by themoviedb.org api system
 void information_Request(const char* movie_title, char* dir_position, char* create_folder_location) {
 
+	//tmbd request control 
+	if (tmdb_int_global >= 38) {
+		printf("Reached maximum TMDB requests, please wait\n\n");
+		Sleep(10000);
+		tmdb_int_global = 0;
+	}
+	
 	//====this is solely to get the key for api call==== 
 	//in real implentation this will ask for the users key
 	FILE* file = fopen("C:\\Users\\dan_a\\Desktop\\key.txt", "r");
@@ -696,12 +797,6 @@ void information_Request(const char* movie_title, char* dir_position, char* crea
 
 				cJSON* movie = NULL;
 
-				/*
-				TODO:
-				will need to implement a query limit since tmdb requests less than 50
-				queries a second
-				*/
-
 				//grab first response and break out of loop
 				cJSON_ArrayForEach(movie, results) {
 					//DELETE
@@ -716,11 +811,9 @@ void information_Request(const char* movie_title, char* dir_position, char* crea
 					
 					media_write(title, description, id, genre_ids, media_type, dir_position, create_folder_location);
 					break;
-					
-					
+	
 					//media_write(title, description, id, genre_ids, media_type, dir_position, create_folder_location);
 					
-				
 					/*
 						NOTE: FOR INSTANCES WHERE THE MOVIE INFORMATION RETURNED WAS INCORRECT IT
 						WILL HAVE TO BE FIXED BY THE USER AT A LATER DATE USING THE TO-BE-IMPLEMENTED
@@ -733,11 +826,11 @@ void information_Request(const char* movie_title, char* dir_position, char* crea
 
 	curl_easy_cleanup(hnd);
 	free(response.string);
-
+	tmdb_int_global += 1;
 	return 0;
 }//end of information_request 
 
-///////////////////////////////////////////////////////////////
+
 void media_write(cJSON* title, cJSON* description, cJSON* id, cJSON* genre_ids, cJSON* media_type, char* dir_position, char* create_folder_location) {
 	char* first_char_string = title->valuestring;
 	char filename[6] = "a.bin";
@@ -800,6 +893,4 @@ void media_write(cJSON* title, cJSON* description, cJSON* id, cJSON* genre_ids, 
 	fclose(file);
 
 }//end of media_write
-///////////////////////////////////////////////////////////////
-
-//--------------------------------------------------------------
+/////////////////////END OF CURL AND JSON PARSING/////////////////////////////////

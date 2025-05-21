@@ -87,7 +87,7 @@ int directorySearch(char* mainStart, char* create_folder_location);
 //------------MISC -----------------------------------
 //Parses input string for function execution
 cJSON* input_string_parsing(char* user_input);
-//gets the entire node of a requested media
+//recovers node and parses into JSON for delivery
 cJSON* get_media(char* title);
 
 //request directory file to be searched

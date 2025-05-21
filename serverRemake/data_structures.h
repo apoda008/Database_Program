@@ -8,7 +8,8 @@
 
 typedef struct MediaData {
     int db_position;
-    char title[260];
+    //watch this; changed from 260 to 256
+    char title[256];
     double tmdb_id;
     bool media_type; // (0 or 1) 1 for movie, 0 for show
     int genre_types[19];
