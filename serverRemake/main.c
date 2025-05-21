@@ -3,7 +3,7 @@
 
 
 int main() {
-	printf("starting up\n");
+	printf("Welcome! Starting DDB.....\n\n");
 	/*
 	TODO:
 		-Runs start up(), which will find the media files through a directed input. Then parse those

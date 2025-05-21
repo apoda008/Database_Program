@@ -35,6 +35,7 @@ struct Memory {
     char* string;
     size_t size;
 };
+
 /*
 ===========LINKED LIST==================
 */

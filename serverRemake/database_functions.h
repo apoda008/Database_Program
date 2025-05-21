@@ -18,6 +18,13 @@
 #include "cJSON.h"
 #include <curl/curl.h>
 
+struct Master_Directory {
+    TCHAR movie_bin_path[MAX_PATH];
+    TCHAR genre_path[MAX_PATH];
+    TCHAR series_bin_path[MAX_PATH];
+
+};
+
 enum ObjectDataType {
     DB_POS,
     TITLE,

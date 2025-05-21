@@ -6,9 +6,8 @@ int db_count_global;
 //this is to track the current amount of TMDB requests
 int tmdb_int_global;
 
-char global_dir_path_bin[MAX_PATH];
-
-
+//for holding pathing after the folders have been made
+struct Master_Directory master_pathing;
 /////////////////////////READ/WRITE////////////////////////////////////
 MediaNode* bin_read(char* database_file) {
 	printf("DATABASE FILE: %s\n", database_file);
@@ -72,6 +71,8 @@ void bin_write(char* database_file, MediaNode* head_ref) {
 	fclose(file);
 }
 ///////////////////////////////////////////////////////////////////////
+
+
 
 /*
 *######################################################################
@@ -146,7 +147,7 @@ int database_sort_all(char* folder_location) {
 
 		//DELETE
 		printf("strcat %s\n", file_first);
-		printf("GLOBAL: %s\n", global_dir_path_bin);
+		printf("GLOBAL: %s\n", master_pathing.movie_bin_path);
 
 		if ((database_sort_individual(&file_first)) == 1) {
 			printf("Database_sort completed\n");
@@ -165,13 +166,15 @@ int database_sort_all(char* folder_location) {
 #######################################################################
 */
 
+
+
 //---------------------------------------------------------------------
 //------------------------Search Commands------------------------------
 
 //Will keep for now but may not be needed
 MediaNode* search_linked_list_object(char* item_to_be_searched) {
 	char file_path[MAX_PATH];
-	strcpy_s(file_path, MAX_PATH, global_dir_path_bin);
+	strcpy_s(file_path, MAX_PATH, master_pathing.movie_bin_path);
 	char bin_file[6] = "a.bin";
 	bin_file[0] = tolower(item_to_be_searched[0]);
 	
@@ -216,6 +219,7 @@ TreeNode* binary_tree_search(TreeNode* root, char* search_request) {
 
 
 //---------------------END SEARCH COMMANDS------------------------------
+//----------------------------------------------------------------------
 
 
 /*
@@ -255,8 +259,6 @@ cJSON* get_media(const char* title) {
 	return json_node;
 
  }
-
-//-----------------END OF USER FUNCTIONS-------------------------------- 
 
 //This is the JSON return API interface. There will be another for the LOCAL 
 cJSON* input_string_parsing(char* user_input) {
@@ -329,6 +331,9 @@ cJSON* input_string_parsing(char* user_input) {
 		token = strtok_s(NULL, " ", &context);
 	}
 }
+//-----------------END OF USER FUNCTIONS-------------------------------- 
+
+
 
 /*
 #####################SOCKET//CONNECTION FUNCTIONS###############
@@ -412,10 +417,12 @@ void api_connection() {
 
 }
 
-
 /*
 #####################END OF CONNECTION ##########################
 */
+
+
+
 ///////////////////////DIRECTORY STUFF///////////////////////////
 
 int directorySearch(char* main_start, char* create_folder_location) {
@@ -491,32 +498,42 @@ int directorySearch(char* main_start, char* create_folder_location) {
 
 //////////////////////END OF DIRECTORY///////////////////////////
 
-//--------------------MISC FUNCTION-----------------------------
 
-//may solve TCHAR troubles
-//bool convert_char_to_tchar(const char* source, TCHAR* dest, size_t dest_count) {
-//	if (!source || !dest) return false;
-//	
-//#ifdef _UNICODE
-//	size_t converted = 0; 
-//	//this is the function that matters
-//	mbstowcs_s(&converted, dest, dest_count, source, _TRUNCATE);
-//#else 
-//	strncpy_s(dest, dest_count, source, _TRUNCATE);
-//#endif
-//
-//	return true;
-//}
 
+//--------------------START UP FUNCTION-----------------------------
 int create_folders(char* input_user_location) {
 	/*This may be possible broken into smaller functions*/
+		/*
+		TODO:
+		Make folders for the nodes .bin files
+		make folder for genre .bin files
+		make temp for error resolution (name collisions or name errors);
+		Database_folder
+			-database_movies
+				-The Avengers
+				-Fired Up
+				-Harry Potter
+				-....
+			-database_shows
+				-south park
+				-band of brother
+				-.....
+			-genres
+				-comedy
+				-drama
+				....
+	*/
 
 	if (!input_user_location) return 1;
 	TCHAR master_path[MAX_PATH];
 	size_t converted = 0;
 	mbstowcs_s(&converted, master_path, MAX_PATH, input_user_location, _TRUNCATE);
+	
 	_tprintf(_T("Converted path: %s\n"), master_path);
-
+	
+	//sets global dir path
+	_tcscpy_s(master_pathing.movie_bin_path, MAX_PATH, master_path);
+	
 	//DB folder creations
 	if (CreateDirectory(master_path, NULL)) {
 		_tprintf(TEXT("Folder created successfully: %s\n"), master_path);
@@ -537,7 +554,9 @@ int create_folders(char* input_user_location) {
 	_tcscpy_s(series_path, MAX_PATH, master_path);
 
 	_tcscat_s(series_path, MAX_PATH, _T("\\Series"));
-	_tprintf(TEXT("Database folder already exists: %s\n"), series_path);
+
+	//sets global series dir
+	_tcscpy_s(master_pathing.series_bin_path, MAX_PATH, series_path);
 	
 	if (CreateDirectory(series_path, NULL)) {
 		_tprintf(TEXT("Series folder created successfully: %s\n"), series_path);
@@ -558,7 +577,9 @@ int create_folders(char* input_user_location) {
 	_tcscpy_s(genre_path, MAX_PATH, master_path);
 
 	_tcscat_s(genre_path, MAX_PATH, _T("\\Genre"));
-	_tprintf(TEXT("Database folder already exists: %s\n"), genre_path);
+
+	//sets global dir path for genre
+	_tcscpy_s(master_pathing.genre_path, MAX_PATH, genre_path);
 
 	if (CreateDirectory(genre_path, NULL)) {
 		_tprintf(TEXT("Series folder created successfully: %s\n"), genre_path);
@@ -578,54 +599,21 @@ int create_folders(char* input_user_location) {
 }
 
 int startUp() {
-	/*
-		TODO:
-		Make folders for the nodes .bin files 
-		make folder for genre .bin files
-		make temp for error resolution (name collisions or name errors);
-	*/
 
-	TCHAR folder_creation_stand_in_Main[MAX_PATH];
-	StringCchCopy(folder_creation_stand_in_Main, MAX_PATH, TEXT("C:\\Users\\dan_a\\Desktop\\Database_folder"));
-	/*TCHAR new_folder_db_movies[MAX_PATH];
-	TCHAR new_folder_shows[MAX_PATH];
-	TCHAR new_folder_genres[MAX_PATH];*/
-	//theoretically changing this doesn't effect folders father down the line
-	//Database_folder
-		//-database_movies
-		//-database_shows
-		//	
-		//-genres
-			//-comedy
-			//-drama
-			//....
-
-	//THis causes an abort error and I have no fucking idea why
+	//this will take user input eventually
 	create_folders("C:\\Users\\dan_a\\Desktop\\Database_folder");
-		
-	;
-	/*
-	if (CreateDirectory(folder_creation_stand_in_Main, NULL)) {
-		_tprintf(TEXT("Folder created successfully: %s\n"), folder_creation_stand_in_Main);
-
-	}
-	else {
-		DWORD error = GetLastError();
-		if (error == ERROR_ALREADY_EXISTS) {
-			_tprintf(TEXT("Folder already exists: %s\n"), folder_creation_stand_in_Main);
-		}
-		else {
-			_tprintf(TEXT("failed: %s\n"), folder_creation_stand_in_Main);
-		}
-	}*/
-
-
+	_tprintf(TEXT("The global dir String: %s\n"), master_pathing.movie_bin_path);
+	_tprintf(TEXT("The global series String: %s\n"), master_pathing.series_bin_path);
+	_tprintf(TEXT("The global genre String: %s\n"), master_pathing.genre_path);
 
 
 	//THIS WILL PROBABLY BE ADJUSTED WHEN ASKING FOR USER INPUT
 	TCHAR test_Dir[MAX_PATH];
-
+	TCHAR folder_creation_stand_in_Main[MAX_PATH];
+	
+	StringCchCopy(folder_creation_stand_in_Main, MAX_PATH, TEXT("C:\\Users\\dan_a\\Desktop\\Database_folder"));
 	StringCchCopy(test_Dir, MAX_PATH, TEXT("C:\\Users\\dan_a\\Desktop\\Personal_Projects\\HomeServerProject\\testdirfolder"));
+	
 	_tprintf(TEXT("The Inputed String: %s\n"), test_Dir);
 	
 	/////////////////////////////////////////////////////////
@@ -640,7 +628,11 @@ int startUp() {
 
 }
 
-//--------------------------------------------------------------
+//-------------------END OF START UP--------------------------------
+
+
+
+
 
 //---------------------MEDIA PARSE FUNCTIONS--------------------
 
@@ -843,7 +835,7 @@ void media_write(cJSON* title, cJSON* description, cJSON* id, cJSON* genre_ids, 
 	strcat_s(file_buffer, MAX_PATH, "\\");
 
 	//set global bin file path for quick reference 
-	strcpy_s(global_dir_path_bin, MAX_PATH, file_buffer);
+	//strcpy_s(master_pathing.movie_bin_path, MAX_PATH, file_buffer);
 	
 	strcat_s(file_buffer, MAX_PATH, filename);
 
@@ -852,7 +844,7 @@ void media_write(cJSON* title, cJSON* description, cJSON* id, cJSON* genre_ids, 
 
 	//set global bin file path for quick reference 
 	
-	printf("GLOBAL DIR PATH: %s", global_dir_path_bin);
+	printf("GLOBAL DIR PATH: %s", master_pathing.movie_bin_path);
 	
 	bool is_movie = false;
 
