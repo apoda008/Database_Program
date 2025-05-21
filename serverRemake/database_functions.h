@@ -109,7 +109,7 @@ void parse_for_database(char* filename, char* dir_position, char* create_folder_
 //makes TMDB request for cursory information
 void information_Request(const char* movie_title, char* dir_position, char* create_folder_location);
 
-int genre_parsing(char* int_arry);
+void genre_write(char* genre_type, char* title);
 
 //writes to a db file
 void media_write(cJSON* title, cJSON* description, cJSON* id, cJSON* genre_ids, cJSON* media_type, char* dir_position, char* create_folder_location);

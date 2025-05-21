@@ -30,11 +30,19 @@ typedef struct TreeNode {
     struct TreeNode* right;
 } TreeNode;
 
+//may not do......
+//typedef struct Dictionary {
+//    char type[256];
+//    int empty;
+//    char movie_title[500][256];
+//
+//} Dictionary;
 
 struct Memory {
     char* string;
     size_t size;
 };
+
 
 /*
 ===========LINKED LIST==================
@@ -73,5 +81,9 @@ void inorder_traversal_print(TreeNode* root);
 
 //frees mem from a binary tree
 TreeNode* free_binary_tree(TreeNode* root);
+
+//&&&&&&&&&&&&&DICTIONARY&&&&&&&&&&&&&&&&&&&&&&&&&&
+//void dictionary_append(Dictionary* dict);
+
 
 #endif // !DATA_STRUCTURES_H

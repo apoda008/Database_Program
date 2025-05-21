@@ -132,6 +132,7 @@ void merge_sort(MediaNode** headRef) {
 
 }
 
+
 //---------------------------TREES--------------------------------------
 TreeNode* create_tree_node(MediaData item) {
 	TreeNode* new_node = (TreeNode*)malloc(sizeof(TreeNode));
@@ -187,3 +188,11 @@ TreeNode* free_binary_tree(TreeNode* root) {
 //*********************************************************************
 
 
+//&&&&&&&&&&&&&&&&&&&&&DICTIONARY&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+
+//void dictionary_append(Dictionary* dict) {
+//	if 
+//}
+
+
+//&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&

@@ -8,8 +8,11 @@ int tmdb_int_global;
 
 //for holding pathing after the folders have been made
 struct Master_Directory master_pathing;
+
 /////////////////////////READ/WRITE////////////////////////////////////
 MediaNode* bin_read(char* database_file) {
+
+
 	printf("DATABASE FILE: %s\n", database_file);
 	FILE* file = fopen(database_file, "rb");
 	if (file == NULL) {
@@ -42,6 +45,10 @@ MediaNode* bin_read(char* database_file) {
 		}
 		//DELETE
 		printf("Title order: %s\n", new_node->data.title);
+
+		for (int i = 0; i < 19; i++) {
+			
+		}
 	}
 
 	fclose(file);
@@ -174,7 +181,10 @@ int database_sort_all(char* folder_location) {
 //Will keep for now but may not be needed
 MediaNode* search_linked_list_object(char* item_to_be_searched) {
 	char file_path[MAX_PATH];
-	strcpy_s(file_path, MAX_PATH, master_pathing.movie_bin_path);
+	
+	size_t converted;
+	wcstombs_s(&converted, file_path, MAX_PATH, master_pathing.movie_bin_path, _TRUNCATE);
+	
 	char bin_file[6] = "a.bin";
 	bin_file[0] = tolower(item_to_be_searched[0]);
 	
@@ -228,7 +238,8 @@ TreeNode* binary_tree_search(TreeNode* root, char* search_request) {
 cJSON* get_media(const char* title) {
 	/*for simplicity right now it is done in Link Lists
 	* in the future this will more than likely be adjusted to 
-	* binary trees
+	* binary trees as well as returning specific things vs the 
+	* entire node
 	*/
 	MediaNode* new_node = search_linked_list_object(title);
 
@@ -844,7 +855,8 @@ void media_write(cJSON* title, cJSON* description, cJSON* id, cJSON* genre_ids, 
 
 	//set global bin file path for quick reference 
 	
-	printf("GLOBAL DIR PATH: %s", master_pathing.movie_bin_path);
+	//printf("GLOBAL DIR PATH: %s", master_pathing.movie_bin_path);
+	_tprintf(_T("GLOBAL DIR PATH: %s\n"), master_pathing.movie_bin_path);
 	
 	bool is_movie = false;
 
@@ -863,6 +875,66 @@ void media_write(cJSON* title, cJSON* description, cJSON* id, cJSON* genre_ids, 
 	cJSON_ArrayForEach(genre_number, genre_ids) {
 		temp.genre_types[i] = (int)genre_number->valuedouble;
 		i++;
+		printf("GENRE: %d\n", temp.genre_types);
+		switch (temp.genre_types[i]) {
+			case ACTION:
+				genre_write("ACTION", temp.title);
+				break;
+			case ADVENTURE:
+				genre_write("ADVENTURE", temp.title);
+				break;
+			case ANIMATION:
+				genre_write("ANIMATION", temp.title);
+				break;
+			case COMEDY:
+				genre_write("COMEDY", temp.title);
+				break;
+			case CRIME:
+				genre_write("CRIME", temp.title);
+				break;
+			case DOCUMENTARY:
+				genre_write("DOCUMENTARY", temp.title);
+				break;
+			case DRAMA:
+				genre_write("DRAMA", temp.title);
+				break;
+			case FAMILY:
+				genre_write("FAMILY", temp.title);
+				break;
+			case FANTASY:
+				genre_write("FANTASY", temp.title);
+				break;
+			case HISTORY:
+				genre_write("HISTORY", temp.title);
+				break;
+			case HORROR:
+				genre_write("HORROR", temp.title);
+				break;
+			case MUSIC:
+				genre_write("MUSIC", temp.title);
+				break;
+			case MYSTERY:
+				genre_write("MYSTERY", temp.title);
+				break;
+			case ROMANCE:
+				break;
+				genre_write("ROMANCE", temp.title);
+			case SCIENCE_FICTION:
+				genre_write("SCIENCE_FICTION", temp.title);
+				break;
+			case TV_MOVIE:
+				genre_write("TV_MOVIE", temp.title);
+				break;
+			case THRILLER:
+				genre_write("THRILLER", temp.title);
+				break;
+			case WAR:
+				genre_write("WAR", temp.title);
+				break;
+			case WESTERN:
+				genre_write("WESTER", temp.title);
+				break;		
+		}
 	}
 
 	//DELETE
@@ -885,4 +957,27 @@ void media_write(cJSON* title, cJSON* description, cJSON* id, cJSON* genre_ids, 
 	fclose(file);
 
 }//end of media_write
+
+void genre_write(char* genre_type, char* title) {
+
+	//this needs adjustment at file open 
+	size_t converted;
+	char file_path[MAX_PATH];
+	wcstombs_s(&converted, file_path, MAX_PATH, master_pathing.genre_path, _TRUNCATE);
+	
+	strcat_s(file_path, MAX_PATH, "\\");
+	strcat_s(file_path, MAX_PATH, genre_type);
+	strcat_s(file_path, MAX_PATH, ".bin");
+
+	printf("ENTERED genre_WRITE\n");
+
+	//needs error checking
+	FILE* genre = fopen(file_path, "ab");
+	
+	fwrite(&title, sizeof(MAX_PATH), 1, genre);
+	
+	fclose(genre);
+
+}
 /////////////////////END OF CURL AND JSON PARSING/////////////////////////////////
+
