@@ -77,6 +77,56 @@ void bin_write(char* database_file, MediaNode* head_ref) {
 
 	fclose(file);
 }
+
+void genre_write(char* genre_type, char* title) {
+
+	//this needs adjustment at file open 
+	size_t converted;
+	char file_path[MAX_PATH];
+	wcstombs_s(&converted, file_path, MAX_PATH, master_pathing.genre_path, _TRUNCATE);
+
+	strcat_s(file_path, MAX_PATH, "\\");
+	strcat_s(file_path, MAX_PATH, genre_type);
+	strcat_s(file_path, MAX_PATH, ".bin");
+
+	//DELETE
+	//printf("ENTERED genre_WRITE: PATH: %s\n\n", file_path);
+
+	//needs error checking
+	FILE* genre = fopen(file_path, "ab");
+	if (!genre) {
+		perror("Failed to open file");
+	}
+
+	fwrite(&title, sizeof(MAX_PATH), 1, genre);
+
+	fclose(genre);
+
+}
+
+void genre_read(char* genre_type) {
+	printf("Entered\n");
+	size_t converted;
+	char file_path[MAX_PATH];
+	wcstombs_s(&converted, file_path, MAX_PATH, master_pathing.genre_path, _TRUNCATE);
+	
+	strcat_s(file_path, MAX_PATH, "\\");
+	strcat_s(file_path, MAX_PATH, genre_type);
+	strcat_s(file_path, MAX_PATH, ".bin");
+	
+	char genre_array[256];
+	
+	FILE* genre = fopen(file_path, "rb");
+	if (genre == NULL) {
+		perror("Failed to open file");
+	}
+
+	while (fread(&genre_array, 256, 1, genre) != 0) {
+		printf("read: %s\n", genre_array);
+	}
+
+	fclose(genre);
+}
 ///////////////////////////////////////////////////////////////////////
 
 
@@ -455,9 +505,6 @@ int directorySearch(char* main_start, char* create_folder_location) {
 	WIN32_FIND_DATA findFileData;
 	HANDLE hFind = FindFirstFile(main_start, &findFileData);
 
-	//DELETE 
-	_tprintf(TEXT("the thing directory: %s\n"), main_start);
-
 
 	if (hFind == INVALID_HANDLE_VALUE) {
 		printf("error handle value. Error: %lu\n", GetLastError());
@@ -507,11 +554,6 @@ int directorySearch(char* main_start, char* create_folder_location) {
 	return 0;
 }
 
-//////////////////////END OF DIRECTORY///////////////////////////
-
-
-
-//--------------------START UP FUNCTION-----------------------------
 int create_folders(char* input_user_location) {
 	/*This may be possible broken into smaller functions*/
 		/*
@@ -539,12 +581,12 @@ int create_folders(char* input_user_location) {
 	TCHAR master_path[MAX_PATH];
 	size_t converted = 0;
 	mbstowcs_s(&converted, master_path, MAX_PATH, input_user_location, _TRUNCATE);
-	
+
 	_tprintf(_T("Converted path: %s\n"), master_path);
-	
+
 	//sets global dir path
 	_tcscpy_s(master_pathing.movie_bin_path, MAX_PATH, master_path);
-	
+
 	//DB folder creations
 	if (CreateDirectory(master_path, NULL)) {
 		_tprintf(TEXT("Folder created successfully: %s\n"), master_path);
@@ -559,7 +601,7 @@ int create_folders(char* input_user_location) {
 			return 1;
 		}
 	}
-	
+
 	//creates series folder
 	TCHAR series_path[MAX_PATH];
 	_tcscpy_s(series_path, MAX_PATH, master_path);
@@ -568,7 +610,7 @@ int create_folders(char* input_user_location) {
 
 	//sets global series dir
 	_tcscpy_s(master_pathing.series_bin_path, MAX_PATH, series_path);
-	
+
 	if (CreateDirectory(series_path, NULL)) {
 		_tprintf(TEXT("Series folder created successfully: %s\n"), series_path);
 	}
@@ -608,6 +650,11 @@ int create_folders(char* input_user_location) {
 
 	return 0;
 }
+//////////////////////END OF DIRECTORY///////////////////////////
+
+
+
+//--------------------START UP FUNCTION-----------------------------
 
 int startUp() {
 
@@ -617,7 +664,7 @@ int startUp() {
 	_tprintf(TEXT("The global series String: %s\n"), master_pathing.series_bin_path);
 	_tprintf(TEXT("The global genre String: %s\n"), master_pathing.genre_path);
 
-
+	genre_read("THRILLER");
 	//THIS WILL PROBABLY BE ADJUSTED WHEN ASKING FOR USER INPUT
 	TCHAR test_Dir[MAX_PATH];
 	TCHAR folder_creation_stand_in_Main[MAX_PATH];
@@ -850,7 +897,7 @@ void media_write(cJSON* title, cJSON* description, cJSON* id, cJSON* genre_ids, 
 	
 	strcat_s(file_buffer, MAX_PATH, filename);
 
-	//DELETE
+	//DELETE BE AWARE; TEMP IS NOT FREED. 
 	printf("FILE_BUFFER: %s\n", file_buffer);
 
 	//set global bin file path for quick reference 
@@ -875,7 +922,30 @@ void media_write(cJSON* title, cJSON* description, cJSON* id, cJSON* genre_ids, 
 	cJSON_ArrayForEach(genre_number, genre_ids) {
 		temp.genre_types[i] = (int)genre_number->valuedouble;
 		i++;
-		printf("GENRE: %d\n", temp.genre_types);
+	}
+
+	//DELETE
+	printf("\n");
+
+	cJSON_Delete(genre_number);
+
+	////////////////FILE WRITE///////////////////////
+
+	FILE* file = fopen(file_buffer, "ab");
+
+	if (file == NULL) {
+		perror("error opening file");
+		return 0;
+	}
+
+	fwrite(&temp, sizeof(MediaData), 1, file);
+
+	fclose(file);
+
+	//genre bin write
+	for (int i = 0; i < 19; i++) {
+		//DELETE
+		//printf("GENRE: %d\n", temp.genre_types[i]);
 		switch (temp.genre_types[i]) {
 			case ACTION:
 				genre_write("ACTION", temp.title);
@@ -933,51 +1003,10 @@ void media_write(cJSON* title, cJSON* description, cJSON* id, cJSON* genre_ids, 
 				break;
 			case WESTERN:
 				genre_write("WESTER", temp.title);
-				break;		
+				break;
 		}
 	}
-
-	//DELETE
-	printf("\n");
-
-	cJSON_Delete(genre_number);
-
-	////////////////FILE WRITE///////////////////////
-
-	FILE* file = fopen(file_buffer, "ab");
-
-	if (file == NULL) {
-		perror("error opening file");
-		return 0;
-	}
-
-	fwrite(&temp, sizeof(MediaData), 1, file);
-
-
-	fclose(file);
-
 }//end of media_write
 
-void genre_write(char* genre_type, char* title) {
-
-	//this needs adjustment at file open 
-	size_t converted;
-	char file_path[MAX_PATH];
-	wcstombs_s(&converted, file_path, MAX_PATH, master_pathing.genre_path, _TRUNCATE);
-	
-	strcat_s(file_path, MAX_PATH, "\\");
-	strcat_s(file_path, MAX_PATH, genre_type);
-	strcat_s(file_path, MAX_PATH, ".bin");
-
-	printf("ENTERED genre_WRITE\n");
-
-	//needs error checking
-	FILE* genre = fopen(file_path, "ab");
-	
-	fwrite(&title, sizeof(MAX_PATH), 1, genre);
-	
-	fclose(genre);
-
-}
 /////////////////////END OF CURL AND JSON PARSING/////////////////////////////////
 
