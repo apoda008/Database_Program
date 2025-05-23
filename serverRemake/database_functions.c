@@ -98,14 +98,14 @@ void genre_write(char* genre_type, char* title) {
 		perror("Failed to open file");
 	}
 
-	fwrite(&title, sizeof(MAX_PATH), 1, genre);
+	//needs error checking
+	fwrite(title, 256, 1, genre);
 
 	fclose(genre);
 
 }
 
-void genre_read(char* genre_type) {
-	printf("Entered\n");
+char genre_read(char* genre_type) {
 	size_t converted;
 	char file_path[MAX_PATH];
 	wcstombs_s(&converted, file_path, MAX_PATH, master_pathing.genre_path, _TRUNCATE);
@@ -114,18 +114,37 @@ void genre_read(char* genre_type) {
 	strcat_s(file_path, MAX_PATH, genre_type);
 	strcat_s(file_path, MAX_PATH, ".bin");
 	
-	char genre_array[256];
+	char buffer[256];
+	char array[60][256];
+
+	//DELETE
+	//printf("filepath: %s\n", file_path);
 	
 	FILE* genre = fopen(file_path, "rb");
 	if (genre == NULL) {
-		perror("Failed to open file");
+		perror("Failed to open file\n");
 	}
 
-	while (fread(&genre_array, 256, 1, genre) != 0) {
-		printf("read: %s\n", genre_array);
-	}
+	//DELETE
+	//do I need this? what plan did i have?
+	long curr_position = ftell(genre);
+	fseek(genre, 0, SEEK_END);
+	long remaning_size = ftell(genre);
+	fseek(genre, curr_position, SEEK_SET);
+	long reading_size = remaning_size - curr_position;
 
+
+	int iterator = 0;
+	while ( (fread(&buffer, 256, 1, genre) != 0) && (iterator < 60) ) {
+		strcpy_s(array[iterator],256, buffer);
+		iterator++;
+	}
+	for (int i = 0; i < iterator; i++) {
+		printf("Array position %d prints %s\n", i, array[i]);
+	}
 	fclose(genre);
+
+	return array;
 }
 ///////////////////////////////////////////////////////////////////////
 
@@ -664,7 +683,7 @@ int startUp() {
 	_tprintf(TEXT("The global series String: %s\n"), master_pathing.series_bin_path);
 	_tprintf(TEXT("The global genre String: %s\n"), master_pathing.genre_path);
 
-	genre_read("THRILLER");
+	genre_read("ADVENTURE");
 	//THIS WILL PROBABLY BE ADJUSTED WHEN ASKING FOR USER INPUT
 	TCHAR test_Dir[MAX_PATH];
 	TCHAR folder_creation_stand_in_Main[MAX_PATH];
@@ -946,6 +965,7 @@ void media_write(cJSON* title, cJSON* description, cJSON* id, cJSON* genre_ids, 
 	for (int i = 0; i < 19; i++) {
 		//DELETE
 		//printf("GENRE: %d\n", temp.genre_types[i]);
+		
 		switch (temp.genre_types[i]) {
 			case ACTION:
 				genre_write("ACTION", temp.title);
